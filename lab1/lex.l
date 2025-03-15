@@ -6,6 +6,7 @@
     #include "bison.tab.h"
     int yycolumn = 1;
     bool flex_has_error = 0;
+    bool is_flex_error[9999] = {0};
 
     #ifdef NO_BISON
     typedef struct YYLTYPE {
@@ -90,6 +91,7 @@ WHILE "while"
             /* Handle unexpected EOF within a comment */
             printf("Error type A at Line %d: Miss match \'*/\'\n", yylineno);
             flex_has_error = 1;
+            is_flex_error[yylineno] = 1;
             break;
         }
     }
@@ -100,10 +102,14 @@ WHILE "while"
 
 "*/" {
     printf("Error type A at Line %d: Miss match \'*/\'\n", yylineno);
+    flex_has_error = 1;
+    is_flex_error[yylineno] = 1;
 }
 
 {INT}"." {
     printf("Error type A at Line %d: Undifined float number\n", yylineno);
+    flex_has_error = 1;
+    is_flex_error[yylineno] = 1;
 }
 
 {FLOAT} {
@@ -325,6 +331,7 @@ WHILE "while"
 . { 
     printf("Error type A at Line %d: Mysterious characters \'%s\'\n", yylineno, yytext);
     flex_has_error = 1;
+    is_flex_error[yylineno] = 1;
 }
 
 
