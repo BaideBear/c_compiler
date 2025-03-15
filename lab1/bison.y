@@ -29,7 +29,17 @@ int main(int argc, char **argv) {
         return 1;
     }
     yyrestart(f);
-    yyparse();
+
+    //use bison
+    //yyparse();
+
+
+    //unuse bison
+    int token;
+    while ((token = yylex()) != 0) {
+    }
+
+
     fclose(f);
     return 0;
 }

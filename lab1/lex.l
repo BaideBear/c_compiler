@@ -98,6 +98,14 @@ WHILE "while"
     #endif
 }
 
+"*/" {
+    printf("Error type A at Line %d: Miss match \'*/\'\n", yylineno);
+}
+
+{INT}"." {
+    printf("Error type A at Line %d: Undifined float number\n", yylineno);
+}
+
 {FLOAT} {
     yylval.node_ins = create_node("FLOAT", TERMINAL, yytext, yylineno);
     #ifdef DEBUG_MODE 
