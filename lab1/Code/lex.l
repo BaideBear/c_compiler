@@ -3,7 +3,7 @@
     //#define DEBUG_MODE
     //#define NO_BISON
     #include "syn_tree.h"
-    #include "bison.tab.h"
+    #include "syntax.tab.h"
     int yycolumn = 1;
     bool flex_has_error = 0;
     bool is_flex_error[9999] = {0};

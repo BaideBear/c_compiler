@@ -61,7 +61,7 @@ syntax-c: $(YFILE)
 
 .PHONY: clean test
 test:
-	./parser ../Test/ex1.cmm
+	./parser ../Test/ex4.cmm
 clean:
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
 	rm -f $(OBJS) $(OBJS:.o=.d)

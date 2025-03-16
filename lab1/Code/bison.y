@@ -1,11 +1,12 @@
 %{
 #include "syn_tree.h"
 #include <stdio.h>
-extern int yylex();
-extern void yyrestart(FILE *input_file);
-extern int yylineno;
-extern bool flex_has_error;
-extern bool is_flex_error[9999];
+#include "lex.yy.c"
+// extern int yylex();
+// extern void yyrestart(FILE *input_file);
+// extern int yylineno;
+// extern bool flex_has_error;
+// extern bool is_flex_error[9999];
 void yyerror(const char *s);
 extern Node* root;
 bool bison_has_error = 0;

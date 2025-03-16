@@ -9,9 +9,23 @@ void set_root(Node* node){  //创立根节点
 Node* create_node(char *name, int type, char *text, int pos){  //创建节点
     Node *node = malloc(sizeof(Node));
     assert(node != NULL);
-    node->name = strdup(name);   //深拷贝
+    // node->name = strdup(name);   //深拷贝, c99下会有Segmentation fault (core dumped)
+    if (name != NULL) {
+        node->name = malloc(strlen(name) + 1);  // 分配内存
+        assert(node->name != NULL);
+        strcpy(node->name, name);  // 复制字符串
+    } else {
+        node->name = NULL;
+    }
     node->type = type;
-    node->text = strdup(text);
+    //node->text = strdup(text);
+    if (text != NULL) {
+        node->text = malloc(strlen(text) + 1);  // 分配内存
+        assert(node->text != NULL);
+        strcpy(node->text, text);  // 复制字符串
+    } else {
+        node->text = NULL;
+    }
     node->pos = pos;
     node->up = NULL;
     node->down = NULL;
