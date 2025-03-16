@@ -35,6 +35,7 @@ bool bison_has_error = 0;
 %left PLUS MINUS
 %left STAR DIV
 %right NOT
+%left UMINUS
 %left LP RP LB RB DOT
 
 %nonassoc LOWER_THAN_ELSE
@@ -300,7 +301,7 @@ Exp ASSIGNOP Exp{
     $$ = create_node("Exp", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 3, $1, $2, $3);
 }
-| MINUS Exp{
+| MINUS Exp %prec UMINUS{
     $$ = create_node("Exp", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 2, $1, $2);
 }
