@@ -1,7 +1,7 @@
 %option yylineno
 %{
-    #define DEBUG_MODE
-    #define NO_BISON
+    //#define DEBUG_MODE
+    //#define NO_BISON
     #include "syn_tree.h"
     #include "bison.tab.h"
     int yycolumn = 1;

@@ -1,4 +1,4 @@
-TARGET = run
+TARGET = parser
 
 LEX_SRC = $(wildcard *.l)
 BISON_SRC = $(wildcard *.y)

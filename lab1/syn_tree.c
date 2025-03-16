@@ -45,7 +45,7 @@ void print_tree_rec(Node* node, int depth){
         printf("  ");  // 每层缩进两个空格
     }
     if (node->type == UNTERMINAL) {
-        printf("%s: (%d)\n", node->name, node->pos);
+        printf("%s (%d)\n", node->name, node->pos);
     } else {
         if ((!strcmp(node->name, "TYPE")) || (!strcmp(node->name, "ID"))){
             printf("%s: %s\n", node->name, node->text);
