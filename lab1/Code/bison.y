@@ -90,6 +90,9 @@ Specifier ExtDecList SEMI{
     $$ = create_node("ExtDef", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 3, $1, $2, $3);
 }
+| Specifier error{$$ = NULL; bison_has_error = 1;}
+| error Specifier SEMI{$$ = NULL; bison_has_error = 1;}
+| error FunDec CompSt{$$ = NULL; bison_has_error = 1;}
 ;
 
 ExtDecList:
@@ -101,6 +104,8 @@ VarDec{
     $$ = create_node("ExtDecList", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 3, $1, $2, $3);
 }
+| VarDec error ExtDecList{$$ = NULL; bison_has_error = 1;}
+| error ExtDecList{$$ = NULL; bison_has_error = 1;}
 ;
 
 Specifier: 
@@ -151,6 +156,7 @@ ID{
     $$ = create_node("VarDec", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 4, $1, $2, $3, $4);
 }
+| VarDec LB error RB{$$ = NULL; bison_has_error = 1;}
 ;
 
 FunDec:
@@ -162,6 +168,8 @@ ID LP VarList RP{
     $$ = create_node("FunDec", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 3, $1, $2, $3);
 }
+| ID error RP{$$ = NULL; bison_has_error = 1;}
+| ID LP error RP{$$ = NULL; bison_has_error = 1;}
 ;
 
 VarList:
@@ -173,6 +181,8 @@ ParamDec COMMA VarList{
     $$ = create_node("VarList", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 1, $1);
 }
+| ParamDec error VarList{$$ = NULL; bison_has_error = 1;}
+| ParamDec error{$$ = NULL; bison_has_error = 1;}
 ;
 
 ParamDec:
@@ -187,6 +197,7 @@ LC DefList StmtList RC{
     $$ = create_node("CompSt", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 4, $1, $2, $3, $4);
 }
+| LC error RC{$$ = NULL; bison_has_error = 1;}
 ;
 
 StmtList:
@@ -197,6 +208,7 @@ Stmt StmtList{
 | /*epsilong*/{
     $$ = NULL;
 }
+| Stmt error{$$ = NULL; bison_has_error = 1;}
 ;
 
 Stmt:
@@ -224,6 +236,13 @@ Exp SEMI{
     $$ = create_node("Stmt", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 5, $1, $2, $3, $4, $5);
 }
+| WHILE error RP{$$ = NULL; bison_has_error = 1;}
+| WHILE error RC{$$ = NULL; bison_has_error = 1;}
+| Exp error{$$ = NULL; bison_has_error = 1;}
+| WHILE LP Exp error Stmt{$$ = NULL; bison_has_error = 1;}
+| RETURN Exp error{$$ = NULL; bison_has_error = 1;}
+| RETURN error SEMI{$$ = NULL; bison_has_error = 1;}
+| error SEMI{$$ = NULL; bison_has_error = 1;}
 ;
 
 DefList:
@@ -241,6 +260,9 @@ Specifier DecList SEMI{
     $$ = create_node("Def", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 3, $1, $2, $3);
 }
+| error DecList SEMI{$$ = NULL; bison_has_error = 1;}
+| Specifier DecList error{$$ = NULL; bison_has_error = 1;}
+| Specifier error SEMI{$$ = NULL; bison_has_error = 1;}
 ;
 
 DecList:
@@ -252,6 +274,7 @@ Dec{
     $$ = create_node("DecList", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 3, $1, $2, $3);
 }
+| Dec error DecList{$$ = NULL; bison_has_error = 1;}
 ;
 
 Dec:
@@ -263,6 +286,7 @@ VarDec{
     $$ = create_node("Dec", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 3, $1, $2, $3);
 }
+|VarDec error{$$ = NULL; bison_has_error = 1;}
 ;
 
 Exp:
@@ -338,6 +362,21 @@ Exp ASSIGNOP Exp{
     $$ = create_node("Exp", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 1, $1);
 }
+| LP error RP{$$ = NULL; bison_has_error = 1;}
+| MINUS error{$$ = NULL; bison_has_error = 1;}
+| ID LP error RP{$$ = NULL; bison_has_error = 1;}
+| NOT error{$$ = NULL; bison_has_error = 1;}
+| Exp LB error RB{$$ = NULL; bison_has_error = 1;}
+| Exp ASSIGNOP error{$$ = NULL; bison_has_error = 1;}
+| Exp AND error{$$ = NULL; bison_has_error = 1;}
+| Exp OR error{$$ = NULL; bison_has_error = 1;}
+| Exp RELOP error{$$ = NULL; bison_has_error = 1;}
+| Exp PLUS error{$$ = NULL; bison_has_error = 1;}
+| Exp MINUS error{$$ = NULL; bison_has_error = 1;}
+| Exp STAR error{$$ = NULL; bison_has_error = 1;}
+| Exp DIV error{$$ = NULL; bison_has_error = 1;}
+| Exp error Exp{$$ = NULL; bison_has_error = 1;}
+
 ;
 
 Args:

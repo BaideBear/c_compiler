@@ -89,7 +89,8 @@ WHILE "while"
             }
         } else if (c == EOF || c == '\0') {
             /* Handle unexpected EOF within a comment */
-            printf("Error type A at Line %d: Miss match \'*/\'\n", yylineno);
+            //printf("Error type A at Line %d: Miss match \'*/\'\n", yylineno);
+            printf("Error type B at Line %d: Miss match\n", yylineno);
             flex_has_error = 1;
             is_flex_error[yylineno] = 1;
             break;
@@ -101,7 +102,8 @@ WHILE "while"
 }
 
 "*/" {
-    printf("Error type A at Line %d: Miss match \'*/\'\n", yylineno);
+    //printf("Error type A at Line %d: Miss match \'*/\'\n", yylineno);
+    printf("Error type B at Line %d: Miss match\n", yylineno);
     flex_has_error = 1;
     is_flex_error[yylineno] = 1;
 }
@@ -329,7 +331,8 @@ WHILE "while"
 }
 
 . { 
-    printf("Error type A at Line %d: Mysterious characters \'%s\'\n", yylineno, yytext);
+    //printf("Error type A at Line %d: Mysterious characters \'%s\'\n", yylineno, yytext);
+    printf("Error type A at Line %d: Mysterious characters\n", yylineno);
     flex_has_error = 1;
     is_flex_error[yylineno] = 1;
 }
