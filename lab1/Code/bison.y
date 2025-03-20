@@ -197,7 +197,6 @@ LC DefList StmtList RC{
     $$ = create_node("CompSt", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 4, $1, $2, $3, $4);
 }
-| LC DefList StmtList error{$$ = NULL; bison_has_error = 1;}
 | LC error RC{$$ = NULL; bison_has_error = 1;}
 ;
 
@@ -209,6 +208,7 @@ Stmt StmtList{
 | /*epsilong*/{
     $$ = NULL;
 }
+| Stmt error{$$ = NULL; bison_has_error = 1;}
 ;
 
 Stmt:
@@ -239,11 +239,10 @@ Exp SEMI{
 | WHILE error RP{$$ = NULL; bison_has_error = 1;}
 | WHILE error RC{$$ = NULL; bison_has_error = 1;}
 | Exp error{$$ = NULL; bison_has_error = 1;}
-| WHILE LP Exp error {$$ = NULL; bison_has_error = 1;}
+| WHILE LP Exp error Stmt{$$ = NULL; bison_has_error = 1;}
 | RETURN Exp error{$$ = NULL; bison_has_error = 1;}
 | RETURN error SEMI{$$ = NULL; bison_has_error = 1;}
 | error SEMI{$$ = NULL; bison_has_error = 1;}
-| Exp error SEMI{$$ = NULL; bison_has_error = 1;}
 ;
 
 DefList:
@@ -367,6 +366,7 @@ Exp ASSIGNOP Exp{
 | MINUS error{$$ = NULL; bison_has_error = 1;}
 | ID LP error RP{$$ = NULL; bison_has_error = 1;}
 | NOT error{$$ = NULL; bison_has_error = 1;}
+| Exp LB error RB{$$ = NULL; bison_has_error = 1;}
 | Exp ASSIGNOP error{$$ = NULL; bison_has_error = 1;}
 | Exp AND error{$$ = NULL; bison_has_error = 1;}
 | Exp OR error{$$ = NULL; bison_has_error = 1;}
@@ -376,6 +376,7 @@ Exp ASSIGNOP Exp{
 | Exp STAR error{$$ = NULL; bison_has_error = 1;}
 | Exp DIV error{$$ = NULL; bison_has_error = 1;}
 | Exp error Exp{$$ = NULL; bison_has_error = 1;}
+
 ;
 
 Args:
