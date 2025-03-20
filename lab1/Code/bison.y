@@ -91,10 +91,7 @@ Specifier ExtDecList SEMI{
     build_cfg($$, 3, $1, $2, $3);
 }
 | Specifier error{$$ = NULL; bison_has_error = 1;}
-| Specifier ExtDecList error{$$ = NULL; bison_has_error = 1;}
-| error SEMI{$$ = NULL; bison_has_error = 1;}
-| error ExtDecList SEMI{$$ = NULL; bison_has_error = 1;}
-| Specifier error CompSt{$$ = NULL; bison_has_error = 1;}
+| error Specifier SEMI{$$ = NULL; bison_has_error = 1;}
 | error FunDec CompSt{$$ = NULL; bison_has_error = 1;}
 ;
 
@@ -131,14 +128,6 @@ STRUCT OptTag LC DefList RC{
     $$ = create_node("StructSpecifier", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 2, $1, $2);
 }
-| error OptTag LC DefList RC{$$ = NULL; bison_has_error = 1;}
-| STRUCT error LC DefList RC{$$ = NULL; bison_has_error = 1;}
-| STRUCT OptTag error DefList RC{$$ = NULL; bison_has_error = 1;}
-| STRUCT OptTag error RC{$$ = NULL; bison_has_error = 1;}
-| STRUCT OptTag LC error RC{$$ = NULL; bison_has_error = 1;}
-| STRUCT OptTag LC DefList error{$$ = NULL; bison_has_error = 1;}
-| error Tag{$$ = NULL; bison_has_error = 1;}
-| STRUCT error{$$ = NULL; bison_has_error = 1;}
 ;
 
 OptTag:
@@ -167,11 +156,7 @@ ID{
     $$ = create_node("VarDec", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 4, $1, $2, $3, $4);
 }
-| VarDec error INT RB{$$ = NULL; bison_has_error = 1;}
-| VarDec error RB{$$ = NULL; bison_has_error = 1;}
 | VarDec LB error RB{$$ = NULL; bison_has_error = 1;}
-| VarDec LB INT error{$$ = NULL; bison_has_error = 1;}
-| error LB INT RB{$$ = NULL; bison_has_error = 1;}
 ;
 
 FunDec:
@@ -183,11 +168,8 @@ ID LP VarList RP{
     $$ = create_node("FunDec", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 3, $1, $2, $3);
 }
-| error LP VarList RP{$$ = NULL; bison_has_error = 1;}
-| error LP RP{$$ = NULL; bison_has_error = 1;}
 | ID error RP{$$ = NULL; bison_has_error = 1;}
 | ID LP error RP{$$ = NULL; bison_has_error = 1;}
-| ID LP VarList error{$$ = NULL; bison_has_error = 1;}
 ;
 
 VarList:
@@ -201,8 +183,6 @@ ParamDec COMMA VarList{
 }
 | ParamDec error VarList{$$ = NULL; bison_has_error = 1;}
 | ParamDec error{$$ = NULL; bison_has_error = 1;}
-| error VarList{$$ = NULL; bison_has_error = 1;}
-| error COMMA VarList{$$ = NULL; bison_has_error = 1;}
 ;
 
 ParamDec:
@@ -210,8 +190,6 @@ Specifier VarDec{
     $$ = create_node("ParamDec", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 2, $1, $2);
 }
-| error VarDec{$$ = NULL; bison_has_error = 1;}
-| Specifier error{$$ = NULL; bison_has_error = 1;}
 ;
 
 CompSt:
@@ -219,9 +197,7 @@ LC DefList StmtList RC{
     $$ = create_node("CompSt", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 4, $1, $2, $3, $4);
 }
-| error RC{$$ = NULL; bison_has_error = 1;}
 | LC DefList StmtList error{$$ = NULL; bison_has_error = 1;}
-| error DefList StmtList RC{$$ = NULL; bison_has_error = 1;}
 | LC error RC{$$ = NULL; bison_has_error = 1;}
 ;
 
@@ -260,23 +236,14 @@ Exp SEMI{
     $$ = create_node("Stmt", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 5, $1, $2, $3, $4, $5);
 }
+| WHILE error RP{$$ = NULL; bison_has_error = 1;}
+| WHILE error RC{$$ = NULL; bison_has_error = 1;}
 | Exp error{$$ = NULL; bison_has_error = 1;}
+| WHILE LP Exp error {$$ = NULL; bison_has_error = 1;}
 | RETURN Exp error{$$ = NULL; bison_has_error = 1;}
-| IF error RP Stmt %prec LOWER_THAN_ELSE{$$ = NULL; bison_has_error = 1;}
-| IF error RP Stmt ELSE Stmt{$$ = NULL; bison_has_error = 1;}
-| WHILE error RP Stmt{$$ = NULL; bison_has_error = 1;}
-| IF LP Exp error Stmt %prec LOWER_THAN_ELSE{$$ = NULL; bison_has_error = 1;}
-| IF LP Exp error %prec LOWER_THAN_ELSE{$$ = NULL; bison_has_error = 1;}
-| IF error Exp RP Stmt %prec LOWER_THAN_ELSE{$$ = NULL; bison_has_error = 1;}
-| IF LP error RP Stmt %prec LOWER_THAN_ELSE{$$ = NULL; bison_has_error = 1;}
-| IF LP Exp error Stmt ELSE Stmt{$$ = NULL; bison_has_error = 1;}
-| IF LP Exp error ELSE Stmt{$$ = NULL; bison_has_error = 1;}
-| IF error Exp RP Stmt ELSE Stmt{$$ = NULL; bison_has_error = 1;}
-| IF LP error RP Stmt ELSE Stmt{$$ = NULL; bison_has_error = 1;}
-| error LP Exp RP %prec LOWER_THAN_ELSE{$$ = NULL; bison_has_error = 1;}
-| error LP Exp RP ELSE Stmt{$$ = NULL; bison_has_error = 1;}
-| error Exp SEMI{$$ = NULL; bison_has_error = 1;}
+| RETURN error SEMI{$$ = NULL; bison_has_error = 1;}
 | error SEMI{$$ = NULL; bison_has_error = 1;}
+| Exp error SEMI{$$ = NULL; bison_has_error = 1;}
 ;
 
 DefList:
@@ -296,6 +263,7 @@ Specifier DecList SEMI{
 }
 | error DecList SEMI{$$ = NULL; bison_has_error = 1;}
 | Specifier DecList error{$$ = NULL; bison_has_error = 1;}
+| Specifier error SEMI{$$ = NULL; bison_has_error = 1;}
 ;
 
 DecList:
@@ -319,7 +287,7 @@ VarDec{
     $$ = create_node("Dec", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 3, $1, $2, $3);
 }
-| VarDec error Exp{$$ = NULL; bison_has_error = 1;}
+|VarDec error{$$ = NULL; bison_has_error = 1;}
 ;
 
 Exp:
@@ -395,17 +363,10 @@ Exp ASSIGNOP Exp{
     $$ = create_node("Exp", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 1, $1);
 }
-| Exp error Exp{$$ = NULL; bison_has_error = 1;}
-| error Exp{$$ = NULL; bison_has_error = 1;}
 | LP error RP{$$ = NULL; bison_has_error = 1;}
-| MINUS error %prec UMINUS {$$ = NULL; bison_has_error = 1;}
-| LP Exp error{$$ = NULL; bison_has_error = 1;}
+| MINUS error{$$ = NULL; bison_has_error = 1;}
 | ID LP error RP{$$ = NULL; bison_has_error = 1;}
-| ID LP Args error{$$ = NULL; bison_has_error = 1;}
-| ID LP error{$$ = NULL; bison_has_error = 1;}
-| Exp error Exp RB{$$ = NULL; bison_has_error = 1;}
-| Exp LB error RB{$$ = NULL; bison_has_error = 1;}
-| Exp LB Exp error{$$ = NULL; bison_has_error = 1;}
+| NOT error{$$ = NULL; bison_has_error = 1;}
 | Exp ASSIGNOP error{$$ = NULL; bison_has_error = 1;}
 | Exp AND error{$$ = NULL; bison_has_error = 1;}
 | Exp OR error{$$ = NULL; bison_has_error = 1;}
@@ -414,6 +375,7 @@ Exp ASSIGNOP Exp{
 | Exp MINUS error{$$ = NULL; bison_has_error = 1;}
 | Exp STAR error{$$ = NULL; bison_has_error = 1;}
 | Exp DIV error{$$ = NULL; bison_has_error = 1;}
+| Exp error Exp{$$ = NULL; bison_has_error = 1;}
 ;
 
 Args:
@@ -425,8 +387,6 @@ Exp COMMA Args{
     $$ = create_node("Args", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 1, $1);
 }
-| Exp error Args{$$ = NULL; bison_has_error = 1;}
-| Exp COMMA error{$$ = NULL; bison_has_error = 1;}
 ;
 
 
