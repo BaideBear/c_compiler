@@ -85,3 +85,12 @@ void print_tree_rec(Node* node, int depth){
 void print_tree() {   // 打印树的结构
     print_tree_rec(root, 0);
 }
+
+Node *get_target_down(Node* now, char* name){
+    Node *p = now->down;
+    while(p != NULL){
+        if(!strcmp(p->name, name)) return p;
+        p = p->next;
+    }
+    return NULL;
+}

@@ -18,7 +18,8 @@ int main(int argc, char **argv) {
 
     yyparse();
     if(!flex_has_error && !bison_has_error){
-       print_tree();
+       //print_tree();
+       Program(root);
     }
 
     fclose(f);

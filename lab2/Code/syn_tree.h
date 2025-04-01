@@ -32,4 +32,6 @@ void print_tree_rec(Node* node, int depth);
 
 void print_tree();   // 打印树的结构
 
+Node *get_target_down(Node* now, char* name); //查询now中名为name的子节点
+
 #endif
