@@ -397,32 +397,6 @@ Exp COMMA Args{
 
 %%
 
-int main(int argc, char **argv) {
-    if (argc <= 1) return 1;
-    FILE *f = fopen(argv[1], "r");
-    if (!f) {
-        perror(argv[1]);
-        return 1;
-    }
-    yyrestart(f);
-
-    //use bison
-    yyparse();
-    if(!flex_has_error && !bison_has_error){
-       print_tree();
-    }
-
-
-    //unuse bison
-    // int token;
-    // while ((token = yylex()) != 0) {
-    // }
-
-
-    fclose(f);
-    return 0;
-}
-
 void yyerror(const char *s) {
     if(!is_flex_error[yylineno]){
         printf("Error type B at Line %d: %s\n", yylineno, s);
