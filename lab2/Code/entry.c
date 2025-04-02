@@ -6,6 +6,7 @@ extern bool flex_has_error;
 extern Node *root;
 extern void yyrestart(FILE * f);
 extern void yyparse();
+extern void Program(Node* root);
 
 int main(int argc, char **argv) {
     if (argc <= 1) return 1;
@@ -18,7 +19,7 @@ int main(int argc, char **argv) {
 
     yyparse();
     if(!flex_has_error && !bison_has_error){
-       //print_tree();
+       print_tree();
        Program(root);
     }
 
