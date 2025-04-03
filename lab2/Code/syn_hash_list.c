@@ -105,6 +105,12 @@ Func* search_func(HashTable_Func* hash_table, char* key) {
     return NULL; // Not found
 }
 
+Type* new_fault(){
+    Type* p = malloc(sizeof(Type));
+    p->kind = FAULT;
+    return p;
+}
+
 Type* new_basic(int basic_){ //basic_: INT/FLOAT
     Type* p = malloc(sizeof(Type));
     p->kind = BASIC;
@@ -138,11 +144,20 @@ void add_struct_member(Type* struct_now, char* name, Type* type){
         pst = now;
         now = now->tail;
     }
-    if(now == NULL){
-        now = p;
+    if(now == NULL && pst == NULL){
+        struct_now->structure = p;
     }else{
         pst->tail = p;
     }
+}
+
+Func* new_fault_func(){
+    Func *p = malloc(sizeof(Func));
+    char *ch = malloc(sizeof(char)*100);
+    p->name = ch;
+    p->return_type = new_fault();
+    p->args = NULL;
+    return p;
 }
 
 Func* new_func(char *name, Type *return_type){
@@ -163,9 +178,15 @@ void add_func_arg(Func* func_now, Type* arg_type){
         pst = now;
         now = now->tail;
     }
-    if(now == NULL){
-        now = p;
-    }else{
+    // if(now == NULL){
+    //     now = p;
+    // }else{
+    //     pst->tail = p;
+    // }
+    if(now == NULL && pst == NULL){
+        func_now->args = p;
+    }
+    else{
         pst->tail = p;
     }
 }
@@ -197,7 +218,9 @@ bool arg_compare(Func *x, Func *y){
     while(1){
         if(x_ == NULL && y_ == NULL) return true;
         else if(x_ == NULL || y_ == NULL) return false;
-        else if(!type_compare(x_->arg_type, y_->arg_type)) return false;
+        else if(!type_compare(x_->arg_type, y_->arg_type)) {
+            return false;
+        }
         x_ = x_->tail;
         y_ = y_->tail;
     }

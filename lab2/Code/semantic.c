@@ -27,7 +27,7 @@ void ExtDefList(Node* now){ //ExtDefList -> ExtDef ExtDefList
     assert(!strcmp(now->name, "ExtDefList"));
 
     Node *ExtDef_ = get_target_down(now, "ExtDef");
-    Node *ExtDefList_ = get_target_down(now, "ExtDefLIst");
+    Node *ExtDefList_ = get_target_down(now, "ExtDefList");
     if(ExtDef_ != NULL) ExtDef(ExtDef_);
     if(ExtDefList_ != NULL) ExtDefList(ExtDefList_);
 }
@@ -38,7 +38,6 @@ void ExtDef(Node* now){
 
     Node *Specifier_ = get_target_down(now, "Specifier");
     Type *type_ = Specifier(Specifier_);
-    assert(type_ != NULL);
     
     Node *ExtDecList_ = get_target_down(now, "ExtDecList");
     Node *FunDec_ = get_target_down(now, "FunDec");
@@ -59,7 +58,8 @@ void ExtDef(Node* now){
 
 Type* Specifier(Node* now){
     DEBUG_PRINT("Specifier");
-    if(now == NULL) return NULL;
+    Type *fault_type = new_fault();
+    if(now == NULL) return fault_type;
     assert(!strcmp(now->name, "Specifier"));
 
     Node *TYPE_ = get_target_down(now, "TYPE");
@@ -74,12 +74,19 @@ Type* Specifier(Node* now){
 }
 Type* StructSpecifier(Node* now){
     DEBUG_PRINT("StructSpecifier");
-    if(now == NULL) return NULL;
+    Type *fault_type = new_fault();
+    if(now == NULL) return fault_type;
     assert(!strcmp(now->name, "StructSpecifier"));
 
     Node *OptTag_ = get_target_down(now, "OptTag");
     Node *DefList_ = get_target_down(now, "DefList");
     Node *Tag_ = get_target_down(now, "Tag");
+    //assert(Tag_ != NULL || OptTag_ != NULL);
+    if(Tag_ == NULL && OptTag_ == NULL){
+        Type *struct_ = new_struct();
+        DefList_struct(DefList_, struct_);
+        return struct_;
+    }
     if(OptTag_ != NULL){ //StructSpecifier -> STRUCT OptTag LC DefList RC
         Type *struct_ = new_struct();
         DefList_struct(DefList_, struct_);
@@ -97,10 +104,12 @@ Type* StructSpecifier(Node* now){
         return struct_;
     }
     else{ //StructSpecifier -> STRUCT Tag
+        assert(Tag_ != NULL);
         char *name_struct = Tag_->down->text; // Tag -> ID
         Type *searched = search_type(table_syn, name_struct);
         if(searched == NULL || searched->kind != STRUCTURE){
             printf("Error type 17 at line %d: The structure was undefined\n", now->pos);
+            return fault_type;
         }
         return searched;
     }
@@ -147,6 +156,7 @@ void Dec_struct(Node *now, Type *struct_, Type *ty){ // DEc -> VarDec, 有assign
     }
     else{
         printf("Error type 15 at line %d: A field of structure has an assignment in defination\n", now->pos);
+        VarDec_struct(VarDec_, struct_, ty);
     }
 }
 void VarDec_struct(Node *now, Type *struct_, Type *ty){
@@ -212,7 +222,8 @@ void VarDec(Node *now, Type *ty){
 }
 Func* FunDec(Node* now, Type* return_type){ //FunDec -> ID LP (VarList) RP
     DEBUG_PRINT("FunDec");
-    if(now == NULL) return NULL;
+    Func* fault_func = new_fault_func();
+    if(now == NULL) return fault_func;
     assert(!strcmp(now->name, "FunDec"));
 
     Func *func_now = new_func(now->down->text, return_type);
@@ -245,7 +256,8 @@ void ParamDec(Node* now, Func* func_){ // ParamDec -> Specifier VarDec
 }
 Type* VarDec_func(Node* now, Type *ty){ //为Func定制的Type,只是增加了返回值，用来获得形参的信息（数组类型）
     DEBUG_PRINT("VarDec_func");
-    if(now == NULL) return NULL;
+    Type *fault_type = new_fault();
+    if(now == NULL) return fault_type;
     assert(!strcmp(now->name, "VarDec"));
 
     Node *VarDec_ = get_target_down(now, "VarDec");
@@ -294,7 +306,6 @@ void Def(Node *now){ // Def -> Specifier DecList SEMI
     Node *Specifier_ = get_target_down(now, "Specifier");
     Node *DecList_ = get_target_down(now, "DecList");
     Type *type_ = Specifier(Specifier_);
-    assert(type_ != NULL);
     DecList(DecList_, type_);
 }
 void DecList(Node *now, Type* ty){ // DecList -> Dec (COMMA DecList)
@@ -342,10 +353,7 @@ void Stmt(Node *now, Func* func_){
     Node *IF_ = get_target_down(now, "IF");
     Node *WHILE_ = get_target_down(now, "WHILE");
     Node *RETURN_ = get_target_down(now, "RETURN");
-    if(Exp_ != NULL){ //Exp SEMI
-        Type *p = Exp(Exp_);
-    }
-    else if(CompSt_ != NULL){ //CompSt
+    if(CompSt_ != NULL){ //CompSt
         CompSt(CompSt_, func_);
     }
     else if(IF_ != NULL){ // IF LP Exp RP Stmt / IF LP Exp RP Stmt ELSE Stmt
@@ -357,7 +365,7 @@ void Stmt(Node *now, Func* func_){
             Stmt(maybe_else->next, func_);
         }
     }
-    else if(WHILE_ != NULL){ // HILE LP Exp RP Stmt
+    else if(WHILE_ != NULL){ // WHILE LP Exp RP Stmt
         Type* p = Exp(get_target_down(now, "Exp"));
         Stmt(get_target_down(now, "Stmt"), func_);
     }
@@ -367,10 +375,158 @@ void Stmt(Node *now, Func* func_){
             printf("Error type 8 at line %d: Return type mismatched\n", now->pos);
         }
     }
+    else if(Exp_ != NULL){ //Exp SEMI
+        Type *p = Exp(Exp_);
+    }
+}
+bool is_left_value(Node *now){  //检查是否是左值表达式
+    Node *next_ = now->down;
+    if(!strcmp(next_->name, "ID") && next_->next == NULL) return true;
+    else if(get_target_down(now, "LB")) return is_left_value(next_);
+    else if(get_target_down(now, "DOT")) return is_left_value(next_);
+    else return false;
 }
 Type* Exp(Node *now){
-    return NULL;
+    DEBUG_PRINT("Exp");
+    Type *fault_type = new_fault();
+    if(now == NULL) return fault_type;
+    assert(!strcmp(now->name, "Exp"));
+
+    Node *ASSIGNOP_ = get_target_down(now, "ASSIGNOP");
+    Node *AND_ = get_target_down(now, "AND");
+    Node *OR_ = get_target_down(now, "OR");
+    Node *RELOP_ = get_target_down(now, "RELOP");
+    Node *PLUS_ = get_target_down(now, "PLUS");
+    Node *MINUS_ = get_target_down(now, "MINUS");
+    Node *STAR_ = get_target_down(now, "STAR");
+    Node *DIV_ = get_target_down(now, "DIV");
+    Node *NOT_ = get_target_down(now, "NOT");
+    Node *LB_ = get_target_down(now, "LB");
+    Node *DOT_ = get_target_down(now, "DOT");
+    Node *LP_ = get_target_down(now, "LP");
+    Node *ID_ = get_target_down(now, "ID");
+    Node *INT_ = get_target_down(now, "INT");
+    Node *FLOAT_ = get_target_down(now, "FLOAT");
+    Node *Args_ = get_target_down(now, "Args");
+    Type *int_example = new_basic(INT);
+    Type *float_example = new_basic(FLOAT);
+    if(ASSIGNOP_ != NULL){
+        Type *t1 = Exp(now->down);
+        Type *t2 = Exp(now->down->next->next);
+        if(!type_compare(t1, t2)) printf("Error type 5 at line %d: Type mismatched\n", now->pos);
+        if(!is_left_value(now->down)) {
+            printf("Error type 6 at line %d: Right Value\n", now->pos);
+        }
+        return t1;
+    }
+    else if(AND_ != NULL || OR_ != NULL){
+        Type *t1 = Exp(now->down);
+        Type *t2 = Exp(now->down->next->next);
+        if(!type_compare(int_example, t1) || !type_compare(int_example, t2))
+            printf("Error type 7 at line %d: Logic operands only accepts int\n", now->pos);
+        return int_example;
+    }
+    else if(RELOP_ != NULL || PLUS_ != NULL || STAR_ != NULL || DIV_ != NULL){
+        Type *t1 = Exp(now->down);
+        Type *t2 = Exp(now->down->next->next);
+        if((!type_compare(t1, t2)) || (type_compare(t1, t2) && !type_compare(t1, int_example) && !type_compare(t1, float_example)))
+            printf("Error type 7 at line %d: Unmatched type or illeagal type for calculating\n", now->pos);
+        if(RELOP_ != NULL) return int_example;
+        else return t1;
+    }
+    else if(MINUS_ != NULL){
+        if(!strcmp(now->down->name, "MINUS")){
+            Type *p = Exp(get_target_down(now, "Exp"));
+            if(!type_compare(int_example, p) && !type_compare(float_example, p))
+                printf("Error type 7 at line %d: illeagal type for calculating\n", now->pos);
+            return p;
+        }
+        else{
+            Type *t1 = Exp(now->down);
+            Type *t2 = Exp(now->down->next->next);
+            if((!type_compare(t1, t2)) || (type_compare(t1, t2) && !type_compare(t1, int_example) && !type_compare(t1, float_example))){
+                printf("Error type 7 at line %d: Unmatched type or illeagal type for calculating\n", now->pos);
+                return fault_type;
+            }
+            else return t1;
+            
+        }
+    }
+    else if(!strcmp(now->down->name, "LP")){
+        return Exp(get_target_down(now, "Exp"));
+    }
+    else if(NOT_ != NULL){
+        Type *p = Exp(get_target_down(now, "Exp"));
+        if(!type_compare(int_example, p)) {
+            printf("Error type 7 at line %d: Logic operands only accepts int\n", now->pos);
+            return int_example;
+        }
+        else return int_example;
+    }
+    else if(LB_ != NULL){
+        Type *t1 = Exp(now->down);
+        Type *t2 = Exp(now->down->next->next);
+        if(!type_compare(int_example, t2)) printf("Error type 12 at line %d: Array index must be int\n", now->pos);
+        if(t1->kind != ARRAY){
+            printf("Error type 10 at line %d: Index must used by array\n", now->pos);
+            return t1;
+        }
+        return t1->elem;
+    }
+    else if(DOT_ != NULL){
+        Type *p = Exp(get_target_down(now, "Exp"));
+        if(p->kind != STRUCTURE){
+            printf("Error type 13 at line %d: Dot must used after a structure\n", now->pos);
+            return p;
+        }
+        char *name_field = get_target_down(now, "ID")->text;
+        FieldList *cur = p->structure;
+        while(cur != NULL){
+            if(strcmp(cur->name, name_field)){
+               cur = cur->tail;
+               continue; 
+            }
+            return cur->type;
+        }
+        printf("Error type 14 at line %d: Undefined field of structure\n", now->pos);
+        return p;
+    }
+    else if(ID_ != NULL && LP_ == NULL){
+        Type *searched = search_type(table_syn, ID_->text);
+        if(searched == NULL){
+            printf("Error type 1 at line %d: Undefined variable\n", now->pos);
+            return fault_type;
+        }
+        else return searched;
+    }
+    else if(INT_ != NULL) return int_example;
+    else if(FLOAT_ != NULL) return float_example;
+    else{
+        Func* virtual_func = new_func("A_VERY_UNIQUE_NAME", NULL);
+        Args(Args_, virtual_func);
+        Func* searched_func = search_func(table_func, ID_->text);
+        Type* searched_type = search_type(table_syn, ID_->text);
+        if(searched_type != NULL){
+            printf("Error type 11 at line %d: Cant call a variable\n", now->pos);
+            return fault_type;
+        }
+        else if(searched_func == NULL){
+            printf("Error type 2 at line %d: Undefined func\n", now->pos);   
+            return fault_type;
+        }
+        else if(!arg_compare(searched_func, virtual_func)){
+            printf("Error type 9 at line %d: Unmatching args\n", now->pos); 
+            return fault_type;
+        }
+        else return searched_func->return_type;
+    }
 }
 void Args(Node *now, Func* func_){
+    DEBUG_PRINT("Args");
+    if(now == NULL) return;
+    assert(!strcmp(now->name, "Args"));
 
+    Node *Args_ = get_target_down(now, "Args");
+    add_func_arg(func_, Exp(get_target_down(now, "Exp")));
+    Args(Args_, func_);
 }
