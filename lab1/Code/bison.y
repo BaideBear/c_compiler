@@ -208,7 +208,7 @@ Stmt StmtList{
 | /*epsilong*/{
     $$ = NULL;
 }
-| Stmt error{$$ = NULL; bison_has_error = 1;}
+| error StmtList{$$ = NULL; bison_has_error = 1;}
 ;
 
 Stmt:
@@ -253,6 +253,7 @@ Def DefList{
 | /*epsilong*/{
     $$ = NULL;
 }
+| error DefList{$$ = NULL; bison_has_error = 1;}
 ;
 
 Def:
@@ -388,6 +389,7 @@ Exp COMMA Args{
     $$ = create_node("Args", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 1, $1);
 }
+| Exp COMMA error{$$ = NULL; bison_has_error = 1;}
 ;
 
 
