@@ -11,7 +11,7 @@ void yyerror(const char *s);
 extern Node* root;
 bool bison_has_error = 0;
 %}
-
+%locations
 %union {
     Node* node_ins;
 }
@@ -90,9 +90,8 @@ Specifier ExtDecList SEMI{
     $$ = create_node("ExtDef", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 3, $1, $2, $3);
 }
-| Specifier error{$$ = NULL; bison_has_error = 1;}
-| error Specifier SEMI{$$ = NULL; bison_has_error = 1;}
-| error FunDec CompSt{$$ = NULL; bison_has_error = 1;}
+
+| Specifier FunDec SEMI{yyerror("syntax error");$$ = NULL; bison_has_error = 1;printf("Invalid ExtDef\n");}
 ;
 
 ExtDecList:
@@ -104,8 +103,6 @@ VarDec{
     $$ = create_node("ExtDecList", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 3, $1, $2, $3);
 }
-| VarDec error ExtDecList{$$ = NULL; bison_has_error = 1;}
-| error ExtDecList{$$ = NULL; bison_has_error = 1;}
 ;
 
 Specifier: 
@@ -156,7 +153,6 @@ ID{
     $$ = create_node("VarDec", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 4, $1, $2, $3, $4);
 }
-| VarDec LB error RB{$$ = NULL; bison_has_error = 1;}
 ;
 
 FunDec:
@@ -168,8 +164,7 @@ ID LP VarList RP{
     $$ = create_node("FunDec", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 3, $1, $2, $3);
 }
-| ID error RP{$$ = NULL; bison_has_error = 1;}
-| ID LP error RP{$$ = NULL; bison_has_error = 1;}
+| ID LP error RP{$$ = NULL; bison_has_error = 1;printf("Invalid FunDec2\n");}
 ;
 
 VarList:
@@ -181,8 +176,6 @@ ParamDec COMMA VarList{
     $$ = create_node("VarList", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 1, $1);
 }
-| ParamDec error VarList{$$ = NULL; bison_has_error = 1;}
-| ParamDec error{$$ = NULL; bison_has_error = 1;}
 ;
 
 ParamDec:
@@ -197,7 +190,7 @@ LC DefList StmtList RC{
     $$ = create_node("CompSt", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 4, $1, $2, $3, $4);
 }
-| LC error RC{$$ = NULL; bison_has_error = 1;}
+| error RC{$$ = NULL; bison_has_error = 1;printf("Invalid Compst\n");}
 ;
 
 StmtList:
@@ -208,7 +201,6 @@ Stmt StmtList{
 | /*epsilong*/{
     $$ = NULL;
 }
-| Stmt error{$$ = NULL; bison_has_error = 1;}
 ;
 
 Stmt:
@@ -236,13 +228,11 @@ Exp SEMI{
     $$ = create_node("Stmt", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 5, $1, $2, $3, $4, $5);
 }
-| WHILE error RP{$$ = NULL; bison_has_error = 1;}
-| WHILE error RC{$$ = NULL; bison_has_error = 1;}
-| Exp error{$$ = NULL; bison_has_error = 1;}
-| WHILE LP Exp error Stmt{$$ = NULL; bison_has_error = 1;}
-| RETURN Exp error{$$ = NULL; bison_has_error = 1;}
-| RETURN error SEMI{$$ = NULL; bison_has_error = 1;}
-| error SEMI{$$ = NULL; bison_has_error = 1;}
+| IF LP error RP Stmt %prec LOWER_THAN_ELSE{$$ = NULL; bison_has_error = 1;printf("Invalid Def1\n");}
+| IF LP error RP Stmt ELSE Stmt{$$ = NULL; bison_has_error = 1;printf("Invalid Def1\n");}
+| WHILE LP error RC{$$ = NULL; bison_has_error = 1;printf("Invalid Def1\n");}
+| WHILE LP error RP Stmt{$$ = NULL; bison_has_error = 1;printf("Invalid Def1\n");}
+|error SEMI{$$ = NULL; bison_has_error = 1;printf("Invalid Def1\n");}
 ;
 
 DefList:
@@ -260,9 +250,7 @@ Specifier DecList SEMI{
     $$ = create_node("Def", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 3, $1, $2, $3);
 }
-| error DecList SEMI{$$ = NULL; bison_has_error = 1;}
-| Specifier DecList error{$$ = NULL; bison_has_error = 1;}
-| Specifier error SEMI{$$ = NULL; bison_has_error = 1;}
+| error SEMI{$$ = NULL; bison_has_error = 1;printf("Invalid Def3\n");}
 ;
 
 DecList:
@@ -274,7 +262,6 @@ Dec{
     $$ = create_node("DecList", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 3, $1, $2, $3);
 }
-| Dec error DecList{$$ = NULL; bison_has_error = 1;}
 ;
 
 Dec:
@@ -286,7 +273,6 @@ VarDec{
     $$ = create_node("Dec", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 3, $1, $2, $3);
 }
-|VarDec error{$$ = NULL; bison_has_error = 1;}
 ;
 
 Exp:
@@ -362,20 +348,6 @@ Exp ASSIGNOP Exp{
     $$ = create_node("Exp", UNTERMINAL, "\0", @$.first_line);
     build_cfg($$, 1, $1);
 }
-| LP error RP{$$ = NULL; bison_has_error = 1;}
-| MINUS error{$$ = NULL; bison_has_error = 1;}
-| ID LP error RP{$$ = NULL; bison_has_error = 1;}
-| NOT error{$$ = NULL; bison_has_error = 1;}
-| Exp LB error RB{$$ = NULL; bison_has_error = 1;}
-| Exp ASSIGNOP error{$$ = NULL; bison_has_error = 1;}
-| Exp AND error{$$ = NULL; bison_has_error = 1;}
-| Exp OR error{$$ = NULL; bison_has_error = 1;}
-| Exp RELOP error{$$ = NULL; bison_has_error = 1;}
-| Exp PLUS error{$$ = NULL; bison_has_error = 1;}
-| Exp MINUS error{$$ = NULL; bison_has_error = 1;}
-| Exp STAR error{$$ = NULL; bison_has_error = 1;}
-| Exp DIV error{$$ = NULL; bison_has_error = 1;}
-| Exp error Exp{$$ = NULL; bison_has_error = 1;}
 
 ;
 
@@ -396,10 +368,9 @@ Exp COMMA Args{
 
 
 %%
-
 void yyerror(const char *s) {
     if(!is_flex_error[yylineno]){
-        printf("Error type B at Line %d: %s\n", yylineno, s);
+        printf("Error type B at Line %d: %s, \n", yylineno, s);
         bison_has_error = 1;
     }
 }
