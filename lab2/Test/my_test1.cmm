@@ -1,0 +1,19 @@
+struct STRUCT_T {
+ struct {
+    int ssa[5];
+    int ssb[5];
+ } sa[10], sb[10];
+};
+int cross(struct STRUCT_T A, struct STRUCT_T B) {
+    int temp[5] = A.sa[3].ssb;
+    B.sa[9].ssa = temp;
+    return 0;
+}
+int main() {
+ struct STRUCT_T s, t;
+ s.sa[4].ssa[2] = 114514;
+ s.sb[7].ssb = s.sa[3].ssb = s.sb[5].ssa = s.sa[4].ssa;
+ cross(s, t);
+ write(t.sa[9].ssa[2]);
+ return 0;
+}
