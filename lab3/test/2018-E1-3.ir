@@ -1,0 +1,98 @@
+FUNCTION average :
+PARAM class
+t1 := #0
+scoreSum := t1
+t2 := #0
+i := t2
+t3 := class
+t4 := #0
+t4 := t4 + #800
+t3 := t3 + t4
+t3 := *t3
+N := t3
+LABEL L1 :
+t5 := i
+t6 := N
+IF t5 < t6 GOTO L2
+GOTO L3
+LABEL L2 :
+t8 := class
+t9 := #0
+t9 := t9 + #0
+t10 := i
+t10 := t10 * #8
+t9 := t9 + t10
+t9 := t9 + #0
+t8 := t8 + t9
+t8 := *t8
+t11 := scoreSum
+t7 := t8 + t11
+scoreSum := t7
+tNULL := t7
+t13 := i
+t14 := #1
+t12 := t13 + t14
+i := t12
+tNULL := t12
+GOTO L1
+LABEL L3 :
+t16 := scoreSum
+t17 := N
+t15 := t16 / t17
+RETURN t15
+FUNCTION main :
+DEC classInit 804
+t18 := #0
+result := t18
+t19 := #10
+initN := t19
+t20 := #0
+j := t20
+t21 := initN
+t22 := #0
+t22 := t22 + #800
+t23 := &classInit
+t23 := t23 + t22
+*t23 := t21
+tNULL := t21
+LABEL L4 :
+t24 := j
+t25 := initN
+IF t24 < t25 GOTO L5
+GOTO L6
+LABEL L5 :
+t28 := j
+t29 := #1
+t27 := t28 + t29
+t31 := j
+t32 := #1
+t30 := t31 + t32
+t26 := t27 * t30
+t33 := #0
+t33 := t33 + #0
+t34 := j
+t34 := t34 * #8
+t33 := t33 + t34
+t33 := t33 + #0
+t35 := &classInit
+t35 := t35 + t33
+*t35 := t26
+tNULL := t26
+t37 := j
+t38 := #1
+t36 := t37 + t38
+j := t36
+tNULL := t36
+GOTO L4
+LABEL L6 :
+t40 := &classInit
+ARG t40
+t39 := CALL average
+result := t39
+tNULL := t39
+t41 := result
+WRITE t41
+
+tNULL := #0
+t42 := #0
+RETURN t42

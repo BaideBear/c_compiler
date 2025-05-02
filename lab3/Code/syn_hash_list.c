@@ -131,6 +131,7 @@ Type* new_struct(){
     Type* p = malloc(sizeof(Type));
     p->kind = STRUCTURE;
     p->structure = NULL;
+    p->structure_size = 0;
     return p;
 }
 void add_struct_member(Type* struct_now, char* name, Type* ty){

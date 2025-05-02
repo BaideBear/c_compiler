@@ -1,0 +1,32 @@
+FUNCTION main :
+DEC p1 8
+t1 := #123
+t2 := #0
+t2 := t2 + #0
+t3 := &p1
+t3 := t3 + t2
+*t3 := t1
+tNULL := t1
+t4 := #56
+t5 := #0
+t5 := t5 + #4
+t6 := &p1
+t6 := t6 + t5
+*t6 := t4
+tNULL := t4
+t8 := &p1
+t9 := #0
+t9 := t9 + #0
+t8 := t8 + t9
+t8 := *t8
+t10 := &p1
+t11 := #0
+t11 := t11 + #4
+t10 := t10 + t11
+t10 := *t10
+t7 := t8 * t10
+WRITE t7
+
+tNULL := #0
+t12 := #0
+RETURN t12

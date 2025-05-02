@@ -2,6 +2,8 @@
 
 //#define DEBUG
 
+//#define bug printf("> %s (%d) <%s, %d>\n", now->name, now->pos, __FUNCTION__, __LINE__);
+
 #ifdef DEBUG
     #define DEBUG_PRINT(str) fprintf(stderr, "%s\n", str)
 #else
@@ -13,7 +15,7 @@ extern HashTable_Func* table_func;
 
 int label_count = 0;
 int temp_count = 0;
-bool Paramtable[100000];
+static bool Paramtable[16384];
 
 int mylog10_int(int x) {
     int result = 0;
@@ -56,9 +58,9 @@ InterCodeList* translateExtDef(Node* now){
     
     if(FunDec_ != NULL){ //ExtDef -> Specifier FunDec CompSt
         InterCode* code1 = newintercode(FUNCTION, FunDec_->down->text);
-        InterCodeList* compst_codes = translateCompSt(get_target_down(now, "CompSt"));
         InterCodeList* label_codes = getInterCodewrapped(code1);
         InterCodeList* fun_codes = translateFunDec(FunDec_);
+        InterCodeList* compst_codes = translateCompSt(get_target_down(now, "CompSt"));
         appendInterCodeList(fun_codes, compst_codes);
         appendInterCodeList(label_codes, fun_codes);
         return label_codes;
@@ -181,21 +183,21 @@ InterCodeList* translateDec(Node* now){
     if(get_target_down(now, "ASSIGNOP") != NULL){
         if(ty->kind == BASIC){
             char *newt1 = new_temp();
-            InterCodeList* exp_codes = translateExp(get_target_down(now, "Exp"), newt1);
             InterCode* code = newintercode(ASSIGN, nowid, newt1);
+            InterCodeList* exp_codes = translateExp(get_target_down(now, "Exp"), newt1);
             appendInterCode(exp_codes, code);
             return exp_codes;
         }
         else{
             char *newt1 = new_temp();
             InterCodeList* exp_codes = translateExp(get_target_down(now, "Exp"), newt1);
-            InterCode* code = newintercode(ASSIGN, nowid, newt1);
-            appendInterCode(codes, code);
+            appendInterCodeList(codes, exp_codes);
             int tysize = getTypeSize(ty) >> 2;
             char * tempt = new_temp();
             char* lefaddr = new_temp();
             char* rightaddr = newt1;
             InterCode* code2 = newintercode(GET_ADDR, lefaddr, nowid);
+            appendInterCode(codes, code2);
             for(int i = 0; i < tysize; i++){
                 InterCode* code3 = newintercode(READ_ADDR, tempt, rightaddr);
                 InterCode* code4 = newintercode(WRITE_ADDR, lefaddr, tempt);
@@ -251,6 +253,7 @@ InterCodeList* translateStmt(Node* now){
     Node *ELSE_ = get_target_down(now, "ELSE");
     Node *WHILE_ = get_target_down(now, "WHILE");
     Node *RETURN_ = get_target_down(now, "RETURN");
+    Node *Stmt_ = get_target_down(now, "Stmt");
 
     if(!strcmp(now->down->name, "Exp")){ //Exp SEMI
         InterCodeList* exp_codes = translateExp(Exp_, "tNULL");
@@ -260,11 +263,11 @@ InterCodeList* translateStmt(Node* now){
         InterCodeList* compst_codes = translateCompSt(now->down);
         return compst_codes;
     }
-    else if(IF_ != NULL && !ELSE_){ // IF LP Exp RP Stmt
+    else if(IF_ != NULL && ELSE_ == NULL){ // IF LP Exp RP Stmt
         char* label1 = new_label();
         char* label2 = new_label();
-        InterCodeList* exp_codes = translateCond(get_target_down(now, "Exp"), label1, label2);
-        InterCodeList* stmt_codes = translateStmt(get_target_down(now, "Stmt"));
+        InterCodeList* exp_codes = translateCond(Exp_, label1, label2);
+        InterCodeList* stmt_codes = translateStmt(Stmt_);
         InterCode* code1 = newintercode(LABEL, label1);
         InterCode* code2 = newintercode(LABEL, label2);
         appendInterCode(exp_codes, code1);
@@ -276,7 +279,7 @@ InterCodeList* translateStmt(Node* now){
         char* label1 = new_label();
         char* label2 = new_label();
         char* label3 = new_label();
-        InterCodeList* exp_codes = translateCond(get_target_down(now, "Exp"), label1, label2);
+        InterCodeList* exp_codes = translateCond(Exp_, label1, label2);
         InterCodeList* stmt_codes1 = translateStmt(now->down->next->next->next->next);
         InterCodeList* stmt_codes2 = translateStmt(now->down->next->next->next->next->next->next);
         InterCode* code1 = newintercode(LABEL, label1);
@@ -295,8 +298,8 @@ InterCodeList* translateStmt(Node* now){
         char* label1 = new_label();
         char* label2 = new_label();
         char* label3 = new_label();
-        InterCodeList* exp_codes = translateCond(get_target_down(now, "Exp"), label2, label3);
-        InterCodeList* stmt_codes = translateStmt(get_target_down(now, "Stmt"));
+        InterCodeList* exp_codes = translateCond(Exp_, label2, label3);
+        InterCodeList* stmt_codes = translateStmt(Stmt_);
         InterCodeList* label_codes = getInterCodewrapped(newintercode(LABEL, label1));
         InterCode* code1 = newintercode(LABEL, label2);
         InterCode* code2 = newintercode(GOTO, label1);
@@ -310,11 +313,12 @@ InterCodeList* translateStmt(Node* now){
     }
     else if(RETURN_ != NULL){
         char *newt1 = new_temp();
-        InterCodeList* exp_codes = translateExp(get_target_down(now, "Exp"), newt1);
+        InterCodeList* exp_codes = translateExp(Exp_, newt1);
         InterCode* code1 = newintercode(RETURN, newt1);
         appendInterCode(exp_codes, code1);
         return exp_codes;
     }
+    return empty_InterCodeList();
 }
 
 InterCodeList* translateCond(Node* now, char* label_true, char* label_false){
@@ -387,7 +391,6 @@ InterCodeList* translateCond(Node* now, char* label_true, char* label_false){
 InterCodeList* translateArgs(Node* now, ArgList* arglist){
     DEBUG_PRINT("translateArgs");
     if(now == NULL) return empty_InterCodeList();
-    
     char * newt1 = new_temp();
     InterCodeList* exp_codes = translateExp(now->down, newt1);
     ArgID* nowid = malloc(sizeof(ArgID));
@@ -411,7 +414,6 @@ InterCodeList* translateExp(Node* now, char* place){
     DEBUG_PRINT("translateExp");
     if(now == NULL) return empty_InterCodeList();
     assert(!strcmp(now->name, "Exp"));
-    
     Node *ASSIGNOP_ = get_target_down(now, "ASSIGNOP");
     Node *AND_ = get_target_down(now, "AND");
     Node *OR_ = get_target_down(now, "OR");
@@ -428,7 +430,30 @@ InterCodeList* translateExp(Node* now, char* place){
     Node *FLOAT_ = get_target_down(now, "FLOAT");
     Node *Args_ = get_target_down(now, "Args");
     
-    if(ASSIGNOP_ != NULL){ // ASSIGNOP
+    if(!strcmp(now->down->name, "ID") && now->down->next == NULL){ //ID
+        DEBUG_PRINT("ID");
+        char* id = now->down->text;
+        Type* ty = search_type(table_syn, id);
+        if(ty->kind == BASIC){
+            InterCode* code1 = newintercode(ASSIGN, place, id);
+            InterCodeList* codes = getInterCodewrapped(code1);
+            return codes;
+        }
+        else{
+            if(isonParam(id)){
+                InterCode* code1 = newintercode(ASSIGN, place, id);
+                InterCodeList* codes = getInterCodewrapped(code1);
+                return codes;
+            }
+            else{
+                InterCode* code1 = newintercode(GET_ADDR, place, id);
+                InterCodeList* codes = getInterCodewrapped(code1);
+                return codes;
+            }
+        }
+    }
+    else if(ASSIGNOP_ != NULL){ // ASSIGNOP
+        DEBUG_PRINT("ASSIGNOP");
         char* newt1 = new_temp();
         InterCodeList* Exp_codes = translateExp(now->down->next->next, newt1);
         if(!strcmp(now->down->down->name,"ID")){
@@ -437,6 +462,8 @@ InterCodeList* translateExp(Node* now, char* place){
             if(ty->kind == BASIC){
                 InterCode* code1 = newintercode(ASSIGN, now->down->down->text, newt1);
                 appendInterCode(Exp_codes, code1);
+                InterCode* code2 = newintercode(ASSIGN, place, newt1);
+                appendInterCode(Exp_codes, code2);//new fixed
                 return Exp_codes;
             }
             else{
@@ -513,40 +540,20 @@ InterCodeList* translateExp(Node* now, char* place){
             for(int i=0; i < tysize; i++){
                 InterCode* code3 = newintercode(READ_ADDR, tempt, rightaddr);
                 InterCode* code4 = newintercode(WRITE_ADDR, lefaddr, tempt);
-                appendInterCode(Exp_codes2, code3);
-                appendInterCode(Exp_codes2, code4);
+                appendInterCode(Exp_codes, code3);
+                appendInterCode(Exp_codes, code4);
                 if(i != tysize - 1){
                     InterCode* code5 = newintercode(PLUS, lefaddr, lefaddr, "#4");
                     InterCode* code6 = newintercode(PLUS, rightaddr, rightaddr, "#4");
-                    appendInterCode(Exp_codes2, code5);
-                    appendInterCode(Exp_codes2, code6);
+                    appendInterCode(Exp_codes, code5);
+                    appendInterCode(Exp_codes, code6);
                 }
             }
             return Exp_codes;
         }
     }
-    else if(!strcmp(now->down->name, "ID") && now->down->next == NULL){ //ID
-        char* id = now->down->text;
-        Type* ty = search_type(table_syn, id);
-        if(ty->kind == BASIC){
-            InterCode* code1 = newintercode(ASSIGN, place, id);
-            InterCodeList* codes = getInterCodewrapped(code1);
-            return codes;
-        }
-        else{
-            if(isonParam(id)){
-                InterCode* code1 = newintercode(ASSIGN, place, id);
-                InterCodeList* codes = getInterCodewrapped(code1);
-                return codes;
-            }
-            else{
-                InterCode* code1 = newintercode(GET_ADDR, place, id);
-                InterCodeList* codes = getInterCodewrapped(code1);
-                return codes;
-            }
-        }
-    }
     else if(!strcmp(now->down->name, "FLOAT")){ //FLOAT
+        DEBUG_PRINT("FLOAT");
         char* floatstr = malloc(strlen(now->down->text) + 2);
         memset(floatstr, 0, sizeof floatstr);
         floatstr[0] = '#';
@@ -556,6 +563,7 @@ InterCodeList* translateExp(Node* now, char* place){
         return codes;
     }
     else if(!strcmp(now->down->name, "INT")){ //INT
+        DEBUG_PRINT("INT");
         char* intstr = malloc(strlen(now->down->text) + 2);
         memset(intstr, 0, sizeof intstr);
         intstr[0] = '#';
@@ -565,6 +573,7 @@ InterCodeList* translateExp(Node* now, char* place){
         return codes;
     }
     else if(PLUS_ != NULL){ //PLUS
+        DEBUG_PRINT("PLUS");
         char* newt1 = new_temp();
         InterCodeList* exp_codes1 = translateExp(now->down, newt1);
         char* newt2 = new_temp();
@@ -575,6 +584,7 @@ InterCodeList* translateExp(Node* now, char* place){
         return exp_codes1;
     }
     else if(MINUS_ != NULL && strcmp(now->down->name, "MINUS")){ //MINUS
+        DEBUG_PRINT("MINUS");
         char* newt1 = new_temp();
         InterCodeList* exp_codes1 = translateExp(now->down, newt1);
         char* newt2 = new_temp();
@@ -584,7 +594,8 @@ InterCodeList* translateExp(Node* now, char* place){
         appendInterCode(exp_codes1, code1);
         return exp_codes1;
     }
-    else if(STAR_ != NULL && !strcmp(now->down->name, "STAR")){ 
+    else if(STAR_ != NULL){ //STAR
+        DEBUG_PRINT("STAR");
         char* newt1 = new_temp();
         InterCodeList* exp_codes1 = translateExp(now->down, newt1);
         char* newt2 = new_temp();
@@ -595,6 +606,7 @@ InterCodeList* translateExp(Node* now, char* place){
         return exp_codes1;
     }
     else if(DIV_ != NULL){ //DIV
+        DEBUG_PRINT("DIV");
         char* newt1 = new_temp();
         InterCodeList* exp_codes1 = translateExp(now->down, newt1);
         char* newt2 = new_temp();
@@ -605,6 +617,7 @@ InterCodeList* translateExp(Node* now, char* place){
         return exp_codes1;
     }
     else if(!strcmp(now->down->name,"MINUS")){ //MINUS(NEG)
+        DEBUG_PRINT("MINUS(NEG)");
         char* newt1 = new_temp();
         InterCodeList* exp_codes = translateExp(now->down->next, newt1);
         InterCode* code1 = newintercode(MINUS, place, "#0", newt1);
@@ -612,6 +625,7 @@ InterCodeList* translateExp(Node* now, char* place){
         return exp_codes;
     }
     else if(AND_ != NULL || OR_ != NULL || NOT_ != NULL || RELOP_ != NULL){ //AND OR NOT RELOP
+        DEBUG_PRINT("AND OR NOT RELOP");
         char* newlabel1 = new_label();
         char* newlabel2 = new_label();
         InterCode * code1 = newintercode(ASSIGN, place, "#0");
@@ -626,9 +640,11 @@ InterCodeList* translateExp(Node* now, char* place){
         return nowans;
     }
     else if(!strcmp(now->down->name, "LP")){//LP Exp RP
+        DEBUG_PRINT("LP Exp RP");
         return translateExp(get_target_down(now, "Exp"), place);
     }
     else if(LP_ != NULL && !Args_){//ID LP RP
+        DEBUG_PRINT("ID LP RP");
         assert(!strcmp(now->down->name, "ID"));
         char* id = now->down->text;
         if(strcmp(id, "read")){
@@ -643,6 +659,7 @@ InterCodeList* translateExp(Node* now, char* place){
         }
     }
     else if(LP_ != NULL && Args_){//ID LP Args RP
+        DEBUG_PRINT("ID LP Args RP");
         char* id = now->down->text;
         ArgList* arglist = malloc(sizeof(ArgList));
         arglist->head = NULL;
@@ -659,6 +676,7 @@ InterCodeList* translateExp(Node* now, char* place){
         Func* func = search_func(table_func, id);
         Arg* funcarg = func->args;
         while(nowid != NULL){
+            Type* ty = funcarg->arg_type;
             InterCode* code1 = newintercode(ARGS, nowid->name);
             InterCodeList* nowcodes = getInterCodewrapped(code1);
             appendInterCodeList(codes2, nowcodes);
@@ -671,6 +689,7 @@ InterCodeList* translateExp(Node* now, char* place){
         return args_codes;
     }
     else if(DOT_ != NULL || LB_ != NULL){ //Exp DOT ID or Exp LB Exp RB
+        DEBUG_PRINT("Exp DOT ID or Exp LB Exp RB");
         Node *p = now;
         char *fromid = NULL;
         while(strcmp(p->name, "ID")){
@@ -689,7 +708,7 @@ InterCodeList* translateExp(Node* now, char* place){
         }
         
         char* toff = new_temp();
-        Offset info = translateExpOffset(now->down, toff);
+        Offset info = translateExpOffset(now, toff);
         appendInterCodeList(anscodes, info.code);
         InterCode* code2 = newintercode(PLUS, tempaddr, tempaddr, toff);
         appendInterCode(anscodes, code2);
@@ -706,7 +725,6 @@ InterCodeList* translateExp(Node* now, char* place){
 Offset translateExpOffset(Node* now, char* place){
     DEBUG_PRINT("translateExpOffset");
     assert(!strcmp(now->name, "Exp"));
-    
     Node *DOT_ = get_target_down(now, "DOT");
     Node *LB_ = get_target_down(now, "LB");
     Node *ID_ = get_target_down(now, "ID");

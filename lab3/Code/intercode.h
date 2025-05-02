@@ -78,6 +78,7 @@ InterCodeList* translateDec(Node* now);
 InterCodeList* translateDecList(Node* now);
 Offset translateExpOffset(Node* now, char* place);
 
+int mulog10_int(int x);
 void writeonParam(char *name);
 bool isonParam(char *name);
 

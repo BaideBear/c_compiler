@@ -14,6 +14,15 @@ HashTable_Func* table_func;
 int semantic_error = 0;
 int has_array = 0;
 
+char * mystrdup(const char *s)
+{
+   size_t  len = strlen(s) +1;
+   void *new = malloc(len);
+   if (new == NULL)
+      return NULL;
+   return (char *)memcpy(new, s, len);
+}
+
 void Program(Node* now){ //在入口进行所有的初始化操作,Program->ExtDefList
     DEBUG_PRINT("Program");
     if(now == NULL) return;
@@ -21,6 +30,7 @@ void Program(Node* now){ //在入口进行所有的初始化操作,Program->ExtD
 
     table_syn = create_table_type(HASH_SIZE);
     table_func = create_table_func(HASH_SIZE);
+    define_lib_func();
     ExtDefList(now->down);
 }
 void ExtDefList(Node* now){ //ExtDefList -> ExtDef ExtDefList
@@ -109,7 +119,6 @@ Type* StructSpecifier(Node* now){
 
             }
         }
-        
         FieldList *p = struct_->structure;
         struct_->structure_size = 0;
         while(p != NULL){
@@ -118,9 +127,9 @@ Type* StructSpecifier(Node* now){
             struct_->structure_size += p->size;
             p = p->tail;
         }
-
         return struct_;
     }
+    
     else{ //StructSpecifier -> STRUCT Tag
         assert(Tag_ != NULL);
         char *name_struct = Tag_->down->text; // Tag -> ID
@@ -132,6 +141,7 @@ Type* StructSpecifier(Node* now){
         }
         return searched;
     }
+    
 }
 void DefList_struct(Node *now, Type* struct_){ // DefList -> Def DefList 特供版，传递structure信息
     DEBUG_PRINT("DefList_struct");
@@ -196,7 +206,8 @@ void VarDec_struct(Node *now, Type *struct_, Type *ty){
             }
             p = p->tail;
         }
-        add_struct_member(struct_, now->down->text, ty);
+        char* field_name = mystrdup(now->down->text);
+        add_struct_member(struct_, field_name, ty);
     }
     else{ // VarDec -> VarDec LB INT RB
         Node *INT_ = get_target_down(now, "INT");
@@ -548,11 +559,13 @@ Type* Exp(Node *now){
             return p;
         }
         char *name_field = get_target_down(now, "ID")->text;
+        DEBUG_PRINT(name_field);
+        assert(name_field != NULL);
         FieldList *cur = p->structure;
         while(cur != NULL){
             if(strcmp(cur->name, name_field)){
-               cur = cur->tail;
-               continue; 
+                cur = cur->tail;
+                continue; 
             }
             return cur->type;
         }

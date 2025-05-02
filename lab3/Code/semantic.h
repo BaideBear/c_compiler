@@ -39,5 +39,6 @@ Type* Exp(Node *now);
 void Args(Node *now, Func* func_);
 
 void define_lib_func();
+char * mystrdup(const char *s);
 
 #endif

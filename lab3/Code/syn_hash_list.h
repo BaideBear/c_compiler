@@ -19,8 +19,8 @@ struct Type{
         int basic; //BASIC, 0->int, 1->float
         struct { Type* elem; int size; int element_size;}; //ARRAY
         FieldList* structure; //STRUCTURE
-        int structure_size; //STRUCTURE
     };
+    int structure_size; //STRUCTURE
 };
 struct FieldList{
     Type* type;
