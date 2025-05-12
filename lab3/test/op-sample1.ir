@@ -1,0 +1,41 @@
+FUNCTION add :
+PARAM temp
+t2 := &temp
+t3 := #0
+t3 := t3 + #0
+t2 := t2 + t3
+t2 := *t2
+t4 := &temp
+t5 := #0
+t5 := t5 + #4
+t4 := t4 + t5
+t4 := *t4
+t1 := t2 + t4
+RETURN t1
+FUNCTION main :
+DEC op 8
+t6 := #1
+t7 := #0
+t7 := t7 + #0
+t8 := &op
+t8 := t8 + t7
+*t8 := t6
+tNULL := t6
+t9 := #2
+t10 := #0
+t10 := t10 + #4
+t11 := &op
+t11 := t11 + t10
+*t11 := t9
+tNULL := t9
+t13 := &op
+ARG t13
+t12 := CALL add
+n := t12
+tNULL := t12
+t14 := n
+WRITE t14
+
+tNULL := #0
+t15 := #0
+RETURN t15
