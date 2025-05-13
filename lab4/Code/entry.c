@@ -45,11 +45,15 @@ int main(int argc, char **argv) {
                 printf("Error: Unable to open output file\n");
                 return 1;
             }
-            FILE *out1 = fopen(argv[3], "w");
-            printInterCodeList(icnow, out1);
-            fclose(out1);
-            //MipsCodeList* mcl = translate_icl(icnow);
-            //output_mipscode(out, mcl);
+
+            //ir
+            // FILE *out1 = fopen(argv[3], "w");
+            // printInterCodeList(icnow, out1);
+            //fclose(out1);
+
+            MipsCodeList* mcl = translate_icl(icnow);
+            output_mipscode(out, mcl);
+            //output_mipscode_std(mcl);
             fclose(out);
        }
     }

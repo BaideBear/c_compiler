@@ -1,6 +1,6 @@
 #include "mips.h"
 
-#define DEBUG_MIPS
+//#define DEBUG_MIPS
 
 #ifdef DEBUG_MIPS
     #define DEBUG_PRINT(format, ...) \
@@ -402,10 +402,8 @@ void add_offset(char* name){
 }
 void dec_offset(MipsCodeList* mcl, char* name, int size){
     DEBUG_PRINT("dec_offset: %s, size = %d\n", name, size);
-    int *p = search_offset(table_offset, name);
-    ASSERT(p != NULL);
     sp_offset += (size >> 2);
-    *p = sp_offset;
+    insert_offset(table_offset, name, sp_offset);
 }
 int get_offset(MipsCodeList* mcl, char* name){
     int *p = search_offset(table_offset, name);
