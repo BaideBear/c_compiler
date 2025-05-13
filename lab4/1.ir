@@ -1,0 +1,40 @@
+FUNCTION main :
+t1 := #0
+a := t1
+t2 := #1
+b := t2
+t3 := #0
+i := t3
+READ t4
+
+n := t4
+tNULL := t4
+LABEL L1 :
+t5 := i
+t6 := n
+IF t5 < t6 GOTO L2
+GOTO L3
+LABEL L2 :
+t8 := a
+t9 := b
+t7 := t8 + t9
+c := t7
+t10 := b
+WRITE t10
+
+tNULL := #0
+t11 := b
+a := t11
+tNULL := t11
+t12 := c
+b := t12
+tNULL := t12
+t14 := i
+t15 := #1
+t13 := t14 + t15
+i := t13
+tNULL := t13
+GOTO L1
+LABEL L3 :
+t16 := #0
+RETURN t16
