@@ -22,6 +22,7 @@ typedef struct MipsCodeList{
 }MipsCodeList;
 
 void output_mipscode(FILE* file, MipsCodeList* mcl); //将mips代码输出到对应的文件中
+void output_mipscode_std(MipsCodeList* mcl); //将mips代码输出到stdout
 MipsCode* new_mipscode(const char *formatted_code); //创建新的mips语句
 MipsCodeList* new_mipscodelist(); //创建新的mips语句列表，包含可执行mips文件的初始代码
 void add_mipscode(MipsCodeList* mcl, char *pattern, ...); //在列表中添加新的mips代码
@@ -39,20 +40,20 @@ typedef struct HashTable_Offset {
     size_t size;
 } HashTable_Offset;
 
-HashTable_Offset* create_table_offset(size_t size);
-void insert_offset(HashTable_Offset* hash_table, char* key, int value);
-int* search_offset(HashTable_Offset* hash_table, char* key);
-void clear_table_offset(HashTable_Offset* hash_table);
+HashTable_Offset* create_table_offset(size_t size); //创建偏移量哈希表
+void insert_offset(HashTable_Offset* hash_table, char* key, int value); //插入偏移量
+int* search_offset(HashTable_Offset* hash_table, char* key); //寻找键值
+void clear_table_offset(HashTable_Offset* hash_table); //清空哈希表
 
-void add_offset(char* name);
-void dec_offset(MipsCodeList* mcl, char* name, int size);
-int get_offset(MipsCodeList* mcl, char* name);
+void add_offset(char* name); //添加变量
+void dec_offset(MipsCodeList* mcl, char* name, int size); //添加DEC申请
+int get_offset(MipsCodeList* mcl, char* name); //获得变量的偏移量
 //void output_offset(MipsCodeList* mcl, char* name);
 
-void create_sp(MipsCodeList* mcl, InterCode* ic);
+void create_sp(MipsCodeList* mcl, InterCode* ic); //创建函数栈帧
 //void output_sp(MipsCodeList* mcl, InterCode* ic);
 
-void clear_stack();
+void clear_stack(); //清空当前栈帧
 
 
 #endif

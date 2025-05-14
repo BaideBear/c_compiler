@@ -1,0 +1,20 @@
+int a2(int a_){
+    return a_;
+}
+
+int a1(int a__){
+    int b = 1;
+    int k = a2(a__);
+    int m = b + k;
+    return m;
+}
+
+int main(){
+    int d = 38;
+    int a = 1;
+    int b_ = a1(1);
+    int c = a + b_;
+    write(c);
+    write(d);
+    return 0;
+}
