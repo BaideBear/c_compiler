@@ -7,6 +7,7 @@
 #include <constant_propagation.h>
 #include <available_expressions_analysis.h>
 #include <copy_propagation.h>
+#include <loop_invariant_code_motion.h>
 
 void remove_dead_block(IR_function *func) {
     // remove
@@ -86,6 +87,10 @@ void IR_optimize() {
             DELETE(liveVariableAnalysis);
             if(!updated) break;
         }
+
+        //// Loop Invariant Code Motion
+
+        build_and_debug_dom_tree(func);
 
     }
 }
