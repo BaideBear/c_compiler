@@ -42,11 +42,6 @@ typedef struct DomTreeNode {
     IR_block* dominated[MAX_BLOCKS];
 } DomTreeNode;
 
-// 全局存储
-DomTreeNode* dom_tree_nodes[MAX_BLOCKS];
-int block_count = 0;
-IR_block* block_array[MAX_BLOCKS];
-
 /* ====================== 循环检测数据结构 ====================== */
 typedef struct {
     IR_block* header;          // 循环头节点
@@ -59,16 +54,10 @@ typedef struct {
     int children_loops[MAX_BLOCKS]; // 子循环索引
 } LoopInfo;
 
-LoopInfo loops[MAX_BLOCKS];  // 存储检测到的循环
-int loop_count;          // 检测到的循环数量
-
 /* ====================== 预头块管理 ====================== */
 typedef struct {
     IR_block* header;      // 循环头节点
     IR_block* preheader;    // 对应的预头块
 } PreheaderRecord;
-
-PreheaderRecord preheader_records[MAX_BLOCKS];  // 存储预头块映射
-int preheader_record_count;
 
 #endif // LOOP_INVARIANT_CODE_MOTION_H

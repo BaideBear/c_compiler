@@ -3,6 +3,17 @@
 #include <stdbool.h>
 #include <string.h>
 
+// 全局存储
+DomTreeNode* dom_tree_nodes[MAX_BLOCKS];
+int block_count = 0;
+IR_block* block_array[MAX_BLOCKS];
+
+LoopInfo loops[MAX_BLOCKS];  // 存储检测到的循环
+int loop_count = 0;          // 检测到的循环数量
+
+PreheaderRecord preheader_records[MAX_BLOCKS];  // 存储预头块映射
+int preheader_record_count;
+
 /* ====================== 支配关系判断函数 ====================== */
 bool is_dominate(IR_block* a, IR_block* b) {
     if (a == b) return true;

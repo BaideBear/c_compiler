@@ -14,7 +14,6 @@
  t7 := &v6 + t6 
  t8 := *t7 
  v5 := t8 
-
     WRITE v1
   WRITE v2
    WRITE v3
