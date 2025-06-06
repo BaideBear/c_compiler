@@ -438,9 +438,9 @@ void insert_preheaders(IR_function* func) {
         }
         
         // 8. 添加跳转指令到预头块
-        IR_goto_stmt* goto_stmt = malloc(sizeof(IR_goto_stmt));
+        /*IR_goto_stmt* goto_stmt = malloc(sizeof(IR_goto_stmt));
         IR_goto_stmt_init(goto_stmt, header->label);
-        VCALL(preheader->stmts, push_back, (IR_stmt*)goto_stmt);
+        VCALL(preheader->stmts, push_back, (IR_stmt*)goto_stmt);*/
         
         // 9. 更新基本块数组
         if (block_count < MAX_BLOCKS) {
