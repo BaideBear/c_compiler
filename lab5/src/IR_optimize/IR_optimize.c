@@ -83,7 +83,7 @@ void IR_optimize() {
         }
         
         //// Loop Invariant Code Motion
-        build_and_debug_dom_tree(func);
+        //build_and_debug_dom_tree(func);
     }
 }
 

@@ -384,7 +384,7 @@ void insert_preheaders(IR_function* func) {
                     VCALL(*new_succs, push_back, preheader);
                     
                     // 替换后继列表
-                    VCALL(func->blk_succ, insert, pred, new_succs);
+                    VCALL(func->blk_succ, set, pred, new_succs);
                     
                     // ==== 修复2：使用正确的API更新跳转指令 ====
                     if (pred->stmts.head != NULL) {  // 直接检查列表头指针
@@ -404,7 +404,7 @@ void insert_preheaders(IR_function* func) {
         }
         
         // 5. 设置预头块的前驱和后继
-        VCALL(func->blk_pred, insert, preheader, outer_preds_ptr);
+        VCALL(func->blk_pred, set, preheader, outer_preds_ptr);
         
         List_IR_block_ptr* preheader_succ_ptr = malloc(sizeof(List_IR_block_ptr));
         List_IR_block_ptr_init(preheader_succ_ptr);

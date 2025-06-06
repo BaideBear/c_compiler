@@ -1,0 +1,15 @@
+int main(){
+    int i = 0;
+    int p = 199;
+    while(i <= 100){
+        if(i > 0){
+            p = 11;
+        }
+        else{
+            p = 22;
+        }
+        i = i + 1;
+    }
+    write(p);
+    return 0;
+}
