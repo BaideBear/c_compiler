@@ -75,11 +75,15 @@ extern void IR_stmt_teardown(IR_stmt *stmt);
 typedef struct {
     IR_label label;
     bool dead;
+    int num; // 用于调试输出, 记录块编号
     List_IR_stmt_ptr stmts;
 } IR_block, *IR_block_ptr;
 DEF_LIST(IR_block_ptr)
 extern void IR_block_init(IR_block *block, IR_label label);
 extern void IR_block_teardown(IR_block *block);
+DEF_MAP(IR_block_ptr, int)
+DEF_SET(IR_block_ptr)
+
 
 //// IR_function
 

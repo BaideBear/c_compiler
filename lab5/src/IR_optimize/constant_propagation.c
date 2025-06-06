@@ -163,7 +163,7 @@ void ConstantPropagation_transferStmt (ConstantPropagation *t,
         /* TODO: solve IR_ASSIGN_STMT
          * Fact_update_value/Fact_meet_value?(...);
          */
-        Fact_meet_value(fact, def, use_val);
+        Fact_update_value(fact, def, use_val);
     } else if(stmt->stmt_type == IR_OP_STMT) {
         IR_op_stmt *op_stmt = (IR_op_stmt*)stmt;
         IR_OP_TYPE IR_op_type = op_stmt->op;
@@ -180,7 +180,7 @@ void ConstantPropagation_transferStmt (ConstantPropagation *t,
             /* TODO: solve stmt with new_def
              * Fact_update_value/Fact_meet_value?(...);
              */
-            Fact_meet_value(fact, def, get_NAC());
+            Fact_update_value(fact, def, get_NAC());
         }
     }
 }

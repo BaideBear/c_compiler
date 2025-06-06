@@ -1,0 +1,12 @@
+FUNCTION main :
+DEC v1 40
+v2 := &v1
+v22 := v2 + #24
+v14 := *v22
+WRITE #30
+WRITE #3
+WRITE #12
+WRITE #6
+WRITE v14
+RETURN #0
+
