@@ -1,5 +1,39 @@
+FUNCTION func :
+v2 := #1
+LABEL L1 :
+IF v2 > #100 GOTO L3
+LABEL L2 :
+v4 := #0
+LABEL L4 :
+IF v4 > #200 GOTO L6
+LABEL L5 :
+v53 := v4 + #1
+v4 := v53
+GOTO L4
+LABEL L6 :
+v54 := v2 + #1
+v2 := v54
+GOTO L1
+LABEL L3 :
+WRITE #123
+WRITE #456
+WRITE #123
+WRITE #456
+RETURN v2
+
 FUNCTION main :
-READ v1
-READ v3
+v37 := #0
+v41 := #99
+LABEL L7 :
+IF v37 > #10 GOTO L9
+LABEL L8 :
+v41 := #789
+v18 := CALL func
+v55 := v37 + #1
+v37 := v55
+GOTO L7
+LABEL L9 :
+WRITE #789
+WRITE v41
 RETURN #0
 

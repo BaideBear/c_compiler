@@ -1,0 +1,36 @@
+int func(){
+    int i = 1;
+    int j = 2;
+    int p = 123;
+    int r = 456;
+    int a1 = 99;
+    int a2 = 99;
+    while(i <= 100){
+        a1 = p + r;
+        j = 0;
+        while(j <= 200){
+            a2 = p * r;
+            j = j + 1;
+        }   
+        i = i + 1;
+    }
+    write(p);
+    write(r);
+    write(p);
+    write(r);
+    return i;
+}
+
+int main(){
+    int m = 0;
+    int s = 789;
+    int a3 = 99;
+    while(m <= 10){
+        a3 = s;
+        func();
+        m = m + 1;
+    }
+    write(s);
+    write(a3);
+    return 0;
+}
