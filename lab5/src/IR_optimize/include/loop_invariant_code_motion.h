@@ -4,6 +4,7 @@
 #include <dataflow_analysis.h>  // 包含项目已有的集合/链表实现
 
 #define MAX_BLOCKS 3000
+#define IS_DEBUG_PRINT_OPEN true // 是否开启调试输出
 
 // 循环结构体（使用已有数据结构替换）
 typedef struct Loop {

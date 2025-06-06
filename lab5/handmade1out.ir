@@ -1,0 +1,16 @@
+FUNCTION main :
+v1 := #0
+v2 := #0
+LABEL L10000 :
+LABEL L1 :
+IF v1 > #100 GOTO L2
+LABEL L3 :
+v2 := #2
+v4 := v1 + #1
+v1 := v4
+GOTO L1
+LABEL L2 :
+WRITE v2
+WRITE #2
+RETURN #0
+
