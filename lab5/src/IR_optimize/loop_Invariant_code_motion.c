@@ -48,7 +48,6 @@ void build_dominator_tree(IR_function* func) {
     // 初始化全局数组
     memset(dom_tree_nodes, 0, sizeof(dom_tree_nodes));
     block_count = 0;
-    
     // 步骤1: 收集所有基本块并建立索引映射
     for_list(IR_block_ptr, blk, func->blocks) {
         if (block_count >= MAX_BLOCKS) break;
@@ -66,7 +65,6 @@ void build_dominator_tree(IR_function* func) {
         dom_tree_nodes[block_count] = node;
         block_count++;
     }
-    
     // 步骤2: 初始化IDom数组
     int idoms[MAX_BLOCKS];
     for (int i = 0; i < block_count; i++) {
@@ -82,12 +80,10 @@ void build_dominator_tree(IR_function* func) {
             break;
         }
     }
-    
     // 步骤3: 迭代计算直接支配者
     bool changed = true;
     while (changed) {
         changed = false;
-        
         for (int i = 0; i < block_count; i++) {
             if (i == entry_index) continue;
             
@@ -95,7 +91,7 @@ void build_dominator_tree(IR_function* func) {
             List_IR_block_ptr *pred_list_ptr = VCALL(func->blk_pred, get, block_array[i]);
             if (!pred_list_ptr || !pred_list_ptr->head) continue;
             
-            int pred_count = List_IR_block_ptr_size(pred_list_ptr);
+            /*int pred_count = List_IR_block_ptr_size(pred_list_ptr);
             
             // 情况1：只有一个前驱
             if (pred_count == 1) {
@@ -116,7 +112,7 @@ void build_dominator_tree(IR_function* func) {
                     changed = true;
                 }
                 continue; // 跳过后续处理
-            }
+            }*/
             // 找到第一个有IDom的前驱作为初始候选
             int new_idom = -1;
             for_list(IR_block_ptr, pred_ptr, *pred_list_ptr) {
@@ -157,7 +153,6 @@ void build_dominator_tree(IR_function* func) {
             }
         }
     }
-    
     // 步骤4: 构建支配树结构
     for (int i = 0; i < block_count; i++) {
         if (i == entry_index || idoms[i] == -1) continue;
@@ -589,9 +584,190 @@ void verify_predecessors(IR_function* func) {
     }
 }
 
+/* ====================== 循环不变式外提函数（API规范版） ====================== */
+void hoist_invariant_code(IR_function* func) {
+    // 1. 按嵌套深度排序（从深到浅）
+    for (int i = 0; i < loop_count; i++) {
+        for (int j = i + 1; j < loop_count; j++) {
+            if (loops[i].depth < loops[j].depth) {
+                LoopInfo temp = loops[i];
+                loops[i] = loops[j];
+                loops[j] = temp;
+            }
+        }
+    }
+
+    // 2. 遍历所有循环（从内层到外层）
+    for (int i = 0; i < loop_count; i++) {
+        IR_block* preheader = NULL;
+        
+        // 使用for循环查找预头块（符合API迭代规范）
+        for (int k = 0; k < preheader_record_count; k++) {
+            if (preheader_records[k].header == loops[i].header) {
+                preheader = preheader_records[k].preheader;
+                break;
+            }
+        }
+        if (!preheader) continue;
+
+        // 3. 遍历循环体中的所有基本块
+        for (int j = 0; j < loops[i].body_count; j++) {
+            IR_block* blk = loops[i].body[j];
+            ListNode_IR_stmt_ptr* stmt_node = blk->stmts.head;
+            ListNode_IR_stmt_ptr* prev_node = NULL;
+            
+            // 4. 遍历基本块中的所有语句
+            while (stmt_node != NULL) {
+                IR_stmt* stmt = stmt_node->val;
+                ListNode_IR_stmt_ptr* next_node = stmt_node->nxt;
+                
+                // 5. 使用虚函数表获取def/use信息（严格遵循API）
+                IR_var def_var = stmt->vTable->get_def(stmt);
+                IR_use use_vec = stmt->vTable->get_use_vec(stmt);
+                
+                // 6. 跳过不可外提的语句类型
+                if (stmt->stmt_type == IR_GOTO_STMT || 
+                    stmt->stmt_type == IR_IF_STMT ||
+                    stmt->stmt_type == IR_RETURN_STMT ||
+                    stmt->stmt_type == IR_CALL_STMT ||
+                    stmt->stmt_type == IR_READ_STMT ||
+                    stmt->stmt_type == IR_WRITE_STMT ||
+                    stmt->stmt_type == IR_STORE_STMT) {
+                    prev_node = stmt_node;
+                    stmt_node = next_node;
+                    continue;
+                }
+
+                // 7. 检查循环不变式条件
+                bool is_invariant = true;
+                
+                // 条件1: 循环不变（操作数不变）
+                for (int u = 0; u < use_vec.use_cnt; u++) {
+                    IR_val val = use_vec.use_vec[u];
+                    if (!val.is_const) {
+                        // 使用for_list宏遍历循环体
+                        for (int k = 0; k < loops[i].body_count; k++) {
+                            IR_block* inner_blk = loops[i].body[k];
+                            for_list(IR_stmt_ptr, s_node, inner_blk->stmts) {
+                                IR_stmt* s = s_node->val;
+                                if (s == stmt) continue;
+                                
+                                // 使用虚函数表获取def
+                                if (s->vTable->get_def(s) == val.var) {
+                                    is_invariant = false;
+                                    break;
+                                }
+                            }
+                            if (!is_invariant) break;
+                        }
+                    }
+                    if (!is_invariant) break;
+                }
+
+                // 条件2: 基本块支配所有出口
+                if (is_invariant) {
+                    for (int e = 0; e < loops[i].exit_count; e++) {
+                        if (!is_dominate(blk, loops[i].exits[e])) {
+                            is_invariant = false;
+                            break;
+                        }
+                    }
+                }
+
+                // 条件3: 循环内无其他赋值
+                if (is_invariant && def_var != IR_VAR_NONE) {
+                    for (int k = 0; k < loops[i].body_count; k++) {
+                        IR_block* inner_blk = loops[i].body[k];
+                        for_list(IR_stmt_ptr, s_node, inner_blk->stmts) {
+                            IR_stmt* s = s_node->val;
+                            if (s == stmt) continue;
+                            
+                            if (s->vTable->get_def(s) == def_var) {
+                                is_invariant = false;
+                                break;
+                            }
+                        }
+                        if (!is_invariant) break;
+                    }
+                }
+
+                // 条件4: 支配所有使用点
+                if (is_invariant && def_var != IR_VAR_NONE) {
+                    for (int k = 0; k < loops[i].body_count; k++) {
+                        IR_block* use_blk = loops[i].body[k];
+                        for_list(IR_stmt_ptr, s_node, use_blk->stmts) {
+                            IR_stmt* s = s_node->val;
+                            IR_use s_use = s->vTable->get_use_vec(s);
+                            
+                            for (int u = 0; u < s_use.use_cnt; u++) {
+                                if (!s_use.use_vec[u].is_const && 
+                                    s_use.use_vec[u].var == def_var) {
+                                    
+                                    if (!is_dominate(blk, use_blk)) {
+                                        is_invariant = false;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!is_invariant) break;
+                        }
+                        if (!is_invariant) break;
+                    }
+                }
+
+                // 8. 外提不变式到预头块（使用VCALL操作链表）
+                if (is_invariant) {
+                    // 从原基本块移除语句（使用链表API）
+                    if (prev_node) {
+                        prev_node->nxt = next_node;
+                    } else {
+                        blk->stmts.head = next_node;
+                    }
+                    
+                    if (next_node) {
+                        next_node->pre = prev_node;
+                    } else {
+                        blk->stmts.tail = prev_node;
+                    }
+                    
+                    // 添加到预头块末尾（使用VCALL宏）
+                    VCALL(preheader->stmts, push_back, stmt);
+                    
+                    // 更新迭代指针
+                    stmt_node = next_node;
+                } else {
+                    prev_node = stmt_node;
+                    stmt_node = next_node;
+                }
+            }
+        }
+    }
+}
+
+void verify_optimization(IR_function* func) {
+    printf("===== 循环不变式外提验证 =====\n");
+    
+    for (int i = 0; i < preheader_record_count; i++) {
+        IR_block* preheader = preheader_records[i].preheader;
+        int invariant_count = 0;
+        
+        // 使用for_list统计外提语句
+        for_list(IR_stmt_ptr, stmt_node, preheader->stmts) {
+            IR_stmt* stmt = stmt_node->val;
+            if (stmt->stmt_type != IR_GOTO_STMT) {
+                invariant_count++;
+            }
+        }
+        
+        printf("预头块 L%d 外提了 %d 条不变式\n", 
+               preheader->label, invariant_count);
+    }
+}
+
 /* ====================== 主入口函数 ====================== */
 void build_and_debug_dom_tree(IR_function* func) {
     // 初始构建支配树和循环检测
+    printf("0\n");
     build_dominator_tree(func);
     DEBUG_PRINT_DOM_TREE(func);
     
@@ -604,10 +780,13 @@ void build_and_debug_dom_tree(IR_function* func) {
     
     // 重新检测循环（考虑新块）
     find_loops(func);
+
+    hoist_invariant_code(func);// 执行循环不变式外提
     
     // 调试输出
     DEBUG_PRINT_DOM_TREE(func);
     DEBUG_PRINT_LOOPS(func);
     DEBUG_PRINT_EDGES(func);
     verify_predecessors(func);
+    verify_optimization(func);
 }

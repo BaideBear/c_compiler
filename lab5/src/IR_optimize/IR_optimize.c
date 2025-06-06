@@ -43,7 +43,6 @@ void IR_optimize() {
         //// 全局公共表达式消除, 可替换为局部
         {
             //// Constant Propagation
-
             constantPropagation = NEW(ConstantPropagation);
             worklist_solver((DataflowAnalysis*)constantPropagation, func);
             VCALL(*constantPropagation, printResult, func);
@@ -51,16 +50,13 @@ void IR_optimize() {
             DELETE(constantPropagation);
 
             //// Available Expressions Analysis
-
             availableExpressionsAnalysis = NEW(AvailableExpressionsAnalysis);
             AvailableExpressionsAnalysis_merge_common_expr(availableExpressionsAnalysis, func);
             worklist_solver((DataflowAnalysis*)availableExpressionsAnalysis, func); // 将子类强制转化为父类
             VCALL(*availableExpressionsAnalysis, printResult, func);
             AvailableExpressionsAnalysis_remove_available_expr_def(availableExpressionsAnalysis, func);
             DELETE(availableExpressionsAnalysis);
-
             //// Copy Propagation
-
             copyPropagation = NEW(CopyPropagation);
             worklist_solver((DataflowAnalysis*)copyPropagation, func);
             VCALL(*copyPropagation, printResult, func);
@@ -70,7 +66,6 @@ void IR_optimize() {
         
 
         //// Constant Propagation (2nd)
-
         constantPropagation = NEW(ConstantPropagation);
         worklist_solver((DataflowAnalysis*)constantPropagation, func);
         VCALL(*constantPropagation, printResult, func);
@@ -78,7 +73,6 @@ void IR_optimize() {
         DELETE(constantPropagation);
 
         //// Live Variable Analysis
-
         while(true) {
             liveVariableAnalysis = NEW(LiveVariableAnalysis);
             worklist_solver((DataflowAnalysis*)liveVariableAnalysis, func); // 将子类强制转化为父类
@@ -87,10 +81,8 @@ void IR_optimize() {
             DELETE(liveVariableAnalysis);
             if(!updated) break;
         }
-
+        
         //// Loop Invariant Code Motion
-
         build_and_debug_dom_tree(func);
-
     }
 }
