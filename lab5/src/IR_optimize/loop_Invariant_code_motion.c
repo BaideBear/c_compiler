@@ -384,7 +384,7 @@ void insert_preheaders(IR_function* func) {
                     VCALL(*new_succs, push_back, preheader);
                     
                     // 替换后继列表
-                    VCALL(func->blk_succ, insert, pred, new_succs);
+                    VCALL(func->blk_succ, set, pred, new_succs);
                     
                     // ==== 修复2：使用正确的API更新跳转指令 ====
                     if (pred->stmts.head != NULL) {  // 直接检查列表头指针
@@ -404,7 +404,7 @@ void insert_preheaders(IR_function* func) {
         }
         
         // 5. 设置预头块的前驱和后继
-        VCALL(func->blk_pred, insert, preheader, outer_preds_ptr);
+        VCALL(func->blk_pred, set, preheader, outer_preds_ptr);
         
         List_IR_block_ptr* preheader_succ_ptr = malloc(sizeof(List_IR_block_ptr));
         List_IR_block_ptr_init(preheader_succ_ptr);
@@ -437,7 +437,7 @@ void insert_preheaders(IR_function* func) {
             curr = curr->nxt;
         }
         
-        // 8. 添加跳转指令到预头块
+        // 8. 在预头块中插入跳转到循环头的goto语句
         /*IR_goto_stmt* goto_stmt = malloc(sizeof(IR_goto_stmt));
         IR_goto_stmt_init(goto_stmt, header->label);
         VCALL(preheader->stmts, push_back, (IR_stmt*)goto_stmt);*/
@@ -613,6 +613,8 @@ void hoist_invariant_code(IR_function* func) {
         // 3. 遍历循环体中的所有基本块
         for (int j = 0; j < loops[i].body_count; j++) {
             IR_block* blk = loops[i].body[j];
+            printf("Processing loop body block L%d\n", blk->num);
+            IR_block_print(blk,stdout);
             ListNode_IR_stmt_ptr* stmt_node = blk->stmts.head;
             ListNode_IR_stmt_ptr* prev_node = NULL;
             
@@ -655,6 +657,10 @@ void hoist_invariant_code(IR_function* func) {
                                 // 使用虚函数表获取def
                                 if (s->vTable->get_def(s) == val.var) {
                                     is_invariant = false;
+                                    if(IS_DEBUG_PRINT_OPEN) {
+                                        printf("非不变式: v%d 在块 L%d 中被修改\n", 
+                                               val.var, inner_blk->num);
+                                    }
                                     break;
                                 }
                             }
@@ -669,6 +675,10 @@ void hoist_invariant_code(IR_function* func) {
                     for (int e = 0; e < loops[i].exit_count; e++) {
                         if (!is_dominate(blk, loops[i].exits[e])) {
                             is_invariant = false;
+                            if(IS_DEBUG_PRINT_OPEN) {
+                                printf("非不变式: 块 L%d 不支配出口 L%d\n", 
+                                       blk->num, loops[i].exits[e]->num);
+                            }
                             break;
                         }
                     }
@@ -684,6 +694,10 @@ void hoist_invariant_code(IR_function* func) {
                             
                             if (s->vTable->get_def(s) == def_var) {
                                 is_invariant = false;
+                                if(IS_DEBUG_PRINT_OPEN) {
+                                    printf("非不变式: 块 L%d 中被修改\n", 
+                                           inner_blk->num);
+                                }
                                 break;
                             }
                         }
@@ -705,6 +719,10 @@ void hoist_invariant_code(IR_function* func) {
                                     
                                     if (!is_dominate(blk, use_blk)) {
                                         is_invariant = false;
+                                        if(IS_DEBUG_PRINT_OPEN) {
+                                            printf("非不变式: 块 L%d 中使用了 v%d, 但不被 L%d 支配\n", 
+                                                   use_blk->num, def_var, blk->num);
+                                        }
                                         break;
                                     }
                                 }
