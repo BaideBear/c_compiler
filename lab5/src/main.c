@@ -6,7 +6,7 @@
 int main(int argc, char *argv[]) {
     srand(time(NULL));
     IR_parse(argc >= 2 ? argv[1] : NULL);
-    //apply_peephole_optimization();
+    apply_peephole_optimization();
     IR_optimize();
     IR_output(argc >= 3 ? argv[2] : NULL);
     if(ir_program_global != NULL)
