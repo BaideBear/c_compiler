@@ -1,5 +1,7 @@
 # 词法分析与语法分析的实现
 
+**contributer**: BaideBear, auroralbeauty
+
 ## 运行方式
 
 编译过程：
